@@ -2,7 +2,7 @@
 import { seedTravelDocs } from '../lib/embeddings.js';
 
 async function main() {
-  console.log('🌱 Seeding Only Explore database with sample travel documents...\n');
+  console.log('Seeding Only Explore database with sample travel documents...\n');
   
   try {
     await seedTravelDocs();
