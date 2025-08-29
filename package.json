@@ -6,7 +6,11 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "test": "tsx src/scripts/test-setup.ts",
+    "test-functions": "tsx src/scripts/test-functions.ts",
+    "test-basic-chat": "tsx src/scripts/test-basic-chat.ts",
+    "test-updated-functions": "tsx src/scripts/test-updated-functions.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.4",
