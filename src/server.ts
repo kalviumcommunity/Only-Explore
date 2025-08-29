@@ -6,6 +6,8 @@ import chatRoutes from './routes/chat.js';
 import basicChatRoutes from './routes/basic-chat.js';
 import functionChatRoutes from './routes/function-chat.js';
 import zeroShotRoutes from './routes/zero-shot.js';
+import oneShotRoutes from './routes/one-shot.js';
+import enhancedChatRoutes from './routes/enhanced-chat.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -24,6 +26,12 @@ app.use('/api/chat', functionChatRoutes);
 
 // Mount zero-shot prompting routes
 app.use('/api/zero-shot', zeroShotRoutes);
+
+// Mount one-shot prompting routes
+app.use('/api/one-shot', oneShotRoutes);
+
+// Mount enhanced chat routes
+app.use('/api/chat', enhancedChatRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -89,20 +97,23 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting'],
-    step: 5
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting'],
+    step: 6
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4 & 5) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5 & 6) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
   console.log(`🔧 Updated Function Chat: http://localhost:${port}/api/chat/functions`);
   console.log(`🎯 Zero-shot API: http://localhost:${port}/api/zero-shot`);
+  console.log(`🎯 One-shot API: http://localhost:${port}/api/one-shot`);
+  console.log(`🔄 Enhanced Chat: http://localhost:${port}/api/chat/enhanced`);
   console.log(`🧪 Test Basic Chat: http://localhost:${port}/api/chat/test-basic`);
   console.log(`🧪 Test Functions: http://localhost:${port}/api/chat/test`);
   console.log(`🧪 Test Updated Functions: http://localhost:${port}/api/chat/test-functions`);
   console.log(`🧪 Test Zero-shot: http://localhost:${port}/api/zero-shot/test`);
+  console.log(`🧪 Test One-shot: http://localhost:${port}/api/one-shot/test`);
 });
