@@ -2,12 +2,16 @@
 import express from 'express';
 import cors from 'cors';
 import { searchTravelDocs, seedTravelDocs } from './lib/embeddings.js';
+import chatRoutes from './routes/chat.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
 
 app.use(cors());
 app.use(express.json());
+
+// Mount chat routes
+app.use('/api', chatRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -70,10 +74,16 @@ app.post('/api/seed', async (req, res) => {
  * Health check
  */
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    features: ['semantic_search', 'function_calling']
+  });
 });
 
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
+  console.log(`🤖 Chat API: http://localhost:${port}/api/chat`);
+  console.log(`🧪 Test Functions: http://localhost:${port}/api/chat/test`);
 });
