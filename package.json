@@ -10,7 +10,8 @@
     "test": "tsx src/scripts/test-setup.ts",
     "test-functions": "tsx src/scripts/test-functions.ts",
     "test-basic-chat": "tsx src/scripts/test-basic-chat.ts",
-    "test-updated-functions": "tsx src/scripts/test-updated-functions.ts"
+    "test-updated-functions": "tsx src/scripts/test-updated-functions.ts",
+    "test-zero-shot": "tsx src/scripts/test-zero-shot.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.4",
