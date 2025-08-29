@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { searchTravelDocs, seedTravelDocs } from './lib/embeddings.js';
 import chatRoutes from './routes/chat.js';
+import basicChatRoutes from './routes/basic-chat.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -10,8 +11,11 @@ const port = process.env.PORT || 4000;
 app.use(cors());
 app.use(express.json());
 
-// Mount chat routes
+// Mount function calling chat routes
 app.use('/api', chatRoutes);
+
+// Mount basic chat routes
+app.use('/api/chat', basicChatRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -77,13 +81,15 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'function_calling']
+    features: ['semantic_search', 'basic_chat', 'function_calling']
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3 & 4) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
-  console.log(`🤖 Chat API: http://localhost:${port}/api/chat`);
+  console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
+  console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
+  console.log(`🧪 Test Basic Chat: http://localhost:${port}/api/chat/test-basic`);
   console.log(`🧪 Test Functions: http://localhost:${port}/api/chat/test`);
 });
