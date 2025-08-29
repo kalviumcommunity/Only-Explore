@@ -4,6 +4,7 @@ import cors from 'cors';
 import { searchTravelDocs, seedTravelDocs } from './lib/embeddings.js';
 import chatRoutes from './routes/chat.js';
 import basicChatRoutes from './routes/basic-chat.js';
+import functionChatRoutes from './routes/function-chat.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -16,6 +17,9 @@ app.use('/api', chatRoutes);
 
 // Mount basic chat routes
 app.use('/api/chat', basicChatRoutes);
+
+// Mount updated function calling routes
+app.use('/api/chat', functionChatRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -90,6 +94,8 @@ app.listen(port, () => {
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
+  console.log(`🔧 Updated Function Chat: http://localhost:${port}/api/chat/functions`);
   console.log(`🧪 Test Basic Chat: http://localhost:${port}/api/chat/test-basic`);
   console.log(`🧪 Test Functions: http://localhost:${port}/api/chat/test`);
+  console.log(`🧪 Test Updated Functions: http://localhost:${port}/api/chat/test-functions`);
 });
