@@ -1,164 +1,164 @@
-# Step 10: Top-K Sampling - Only Explore
+# Step 10: Top-P (Nucleus Sampling) - Only Explore
 
 ## 🎯 Overview
 
-Step 10 implements **Top-K Sampling** - a crucial AI decoding strategy that controls response diversity by limiting the number of word choices the model considers. This lets us balance predictability with creativity in our travel assistant responses.
+Step 10 implements **Top-P (Nucleus Sampling)** - an advanced AI decoding strategy that dynamically controls vocabulary diversity by limiting the probability mass of word choices. This provides precise control over how conservative or creative our travel assistant responses become.
 
-## 🎯 Understanding Top-K Sampling
+## 🎯 Understanding Top-P Sampling
 
-### **What is Top-K Sampling?**
-Top-K sampling is a **decoding strategy** used in language models when generating text:
+### **What is Top-P Sampling?**
+Top-P sampling, also known as **Nucleus Sampling**, is a sophisticated decoding strategy that:
 
-- Instead of considering **all possible next words**, the model only looks at the **top K most likely words**
-- Then, it picks randomly from those K options
-- **K controls diversity**: Lower K = more predictable, Higher K = more diverse
+- Controls which words are available for selection based on their probability mass
+- **Top-P 0.5**: Only considers words that make up 50% of the probability space (very conservative)
+- **Top-P 0.9**: Considers words that make up 90% of the probability space (more diverse)
+- **Dynamic adaptation**: The number of words considered varies based on their probability distribution
+
+### **Top-P vs Temperature**
+- **Temperature**: Controls randomness in selection among chosen words
+- **Top-P**: Controls which words are available for selection
+- **Combined**: Together they provide fine-grained control over response style
 
 ### **Travel Applications**
-- **Precise (K=5)**: Itinerary planning, budget calculations, travel facts
-- **Balanced (K=20)**: Restaurant recommendations, activity suggestions, general advice
-- **Creative (K=50)**: Destination descriptions, travel stories, inspiration
+- **Focused (P=0.5)**: Essential attractions, safety info, proven itineraries
+- **Balanced (P=0.8)**: Restaurant recommendations, general travel advice
+- **Creative (P=0.95)**: Hidden gems, unique experiences, storytelling
 
 ## 🚀 Key Features
 
-### 1. **Three Top-K Profiles**
-- **Precise Mode**: K=5 for focused, consistent, reliable responses
-- **Balanced Mode**: K=20 for mix of consistency and variety
-- **Creative Mode**: K=50 for diverse, varied, imaginative responses
+### 1. **Three Top-P Modes**
+- **Focused Mode**: P=0.5 for conservative, high-confidence responses
+- **Balanced Mode**: P=0.8 for mix of popular and unique suggestions
+- **Creative Mode**: P=0.95 for diverse, imaginative, exploratory responses
 
-### 2. **Automatic Top-K Detection**
-- Analyzes query content to determine optimal K value
+### 2. **Automatic Mode Detection**
+- Analyzes query content to determine optimal P value
 - Keyword-based detection for different query types
 - Smart selection without manual intervention
 
-### 3. **Top-K Comparison**
-- Side-by-side comparison of all three K values
+### 3. **Top-P Comparison**
+- Side-by-side comparison of all three P values
 - Demonstrates how same query produces different responses
-- Educational tool for understanding K effects
+- Educational tool for understanding P effects
 
-### 4. **Diversity Demonstration**
-- Multiple runs with same K value to show variety
-- Word overlap analysis to measure diversity
-- Visual demonstration of K's impact on response variety
+### 4. **Dynamic Top-P Adjustment**
+- Adjusts P value based on user preferences
+- Risk tolerance consideration (low/medium/high)
+- Preference for popular vs unique experiences
 
 ## 📁 File Structure
 
 ```
 src/
 ├── lib/
-│   └── top-k-sampling.ts          # Core Top-K sampling logic
+│   └── top-p-sampling.ts          # Core Top-P sampling logic
 ├── routes/
-│   └── top-k-sampling.ts          # API endpoints
+│   └── top-p-sampling.ts          # API endpoints
 └── scripts/
-    └── test-top-k-sampling.ts     # Comprehensive testing
+    └── test-top-p-sampling.ts     # Comprehensive testing
 ```
 
 ## 🔧 Implementation Details
 
 ### Core Components
 
-#### 1. **Top-K Settings**
+#### 1. **Top-P Settings**
 ```typescript
-export const topKSettings = {
-  precise: {
-    topK: 5,
-    description: 'Focused, consistent, reliable responses',
-    useCases: ['itinerary planning', 'budget calculations', 'travel facts']
+export const topPSettings = {
+  focused: {
+    topP: 0.5,
+    temperature: 0.6,
+    description: 'Conservative, high-confidence responses',
+    useCases: ['structured itineraries', 'essential travel info', 'must-visit places']
   },
   balanced: {
-    topK: 20,
-    description: 'Mix of consistency and variety',
-    useCases: ['restaurant recommendations', 'activity suggestions', 'cultural insights']
+    topP: 0.8,
+    temperature: 0.7,
+    description: 'Mix of popular and unique suggestions',
+    useCases: ['food recommendations', 'activity suggestions', 'cultural insights']
   },
   creative: {
-    topK: 50,
-    description: 'Diverse, varied, imaginative responses',
-    useCases: ['travel stories', 'destination descriptions', 'experience narratives']
+    topP: 0.95,
+    temperature: 0.8,
+    description: 'Diverse, imaginative, exploratory responses',
+    useCases: ['storytelling', 'hidden gems', 'unique experiences']
   }
 };
 ```
 
-#### 2. **System Prompts**
+#### 2. **Mode Prompts**
 ```typescript
-const systemPrompts = {
-  precise: `You are Only Explore, a precise and reliable travel assistant...`,
-  balanced: `You are Only Explore, a knowledgeable travel assistant...`,
-  creative: `You are Only Explore, a creative travel storyteller...`
+const modePrompts = {
+  focused: `You are Only Explore, a reliable travel assistant...`,
+  balanced: `You are Only Explore, a knowledgeable travel guide...`,
+  creative: `You are Only Explore, an adventurous travel explorer...`
 };
 ```
 
-#### 3. **Top-K Detection**
+#### 3. **Mode Detection**
 ```typescript
-export function detectOptimalTopK(query: string): 'precise' | 'balanced' | 'creative' {
-  // Analyzes query keywords to determine optimal K value
-  // Returns appropriate Top-K profile
+export function detectOptimalTopPMode(query: string): 'focused' | 'balanced' | 'creative' {
+  // Analyzes query keywords to determine optimal P value
+  // Returns appropriate Top-P mode
 }
 ```
 
 ## 🌐 API Endpoints
 
-### 1. **Main Top-K Sampling**
+### 1. **Main Top-P Sampling**
 ```http
-POST /api/top-k
+POST /api/top-p
 ```
 
 **Request Body:**
 ```json
 {
-  "query": "Calculate exact costs for 5 days in Paris with $2000 budget",
-  "taskType": "precise",
-  "topK": 5,
-  "context": "User is planning a budget trip"
+  "query": "What are the essential must-visit places in Paris?",
+  "mode": "focused",
+  "topP": 0.5,
+  "temperature": 0.6,
+  "context": "User wants reliable recommendations"
 }
 ```
 
-### 2. **Top-K Comparison**
+### 2. **Top-P Comparison**
 ```http
-POST /api/top-k/compare
+POST /api/top-p/compare
 ```
 
 **Request Body:**
 ```json
 {
-  "query": "Tell me about the experience of visiting Machu Picchu",
-  "context": "User wants to understand the destination"
+  "query": "Recommend restaurants in Barcelona",
+  "context": "User wants dining suggestions"
 }
 ```
 
-### 3. **Smart Top-K Selection**
+### 3. **Dynamic Top-P Adjustment**
 ```http
-POST /api/top-k/smart
+POST /api/top-p/dynamic
 ```
 
 **Request Body:**
 ```json
 {
-  "query": "What visa documents do I need for Japan?",
-  "context": "Planning international travel"
+  "query": "Plan activities in Amsterdam",
+  "preferences": {
+    "seekingPopular": false,
+    "wantsUnique": true,
+    "riskTolerance": "high"
+  }
 }
 ```
 
-### 4. **Diversity Demonstration**
+### 4. **Test Scenarios**
 ```http
-POST /api/top-k/diversity
+GET /api/top-p/test
 ```
 
-**Request Body:**
-```json
-{
-  "query": "Suggest some local dishes to try in Thailand",
-  "topK": 20,
-  "runs": 3
-}
-```
-
-### 5. **Test Scenarios**
+### 5. **Top-P Information**
 ```http
-GET /api/top-k/test
-```
-
-### 6. **Top-K Information**
-```http
-GET /api/top-k/info
+GET /api/top-p/info
 ```
 
 ## 🧪 Testing
@@ -166,102 +166,102 @@ GET /api/top-k/info
 ### Run Comprehensive Tests
 ```bash
 # Compile and run test script
-npx tsc src/scripts/test-top-k-sampling.ts
-node src/scripts/test-top-k-sampling.js
+npx tsc src/scripts/test-top-p-sampling.ts
+node src/scripts/test-top-p-sampling.js
 ```
 
 ### Manual Testing with curl
 
-#### 1. Precise Query Test
+#### 1. Focused Query Test
 ```bash
-curl -X POST http://localhost:4000/api/top-k \
+curl -X POST http://localhost:4000/api/top-p \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Calculate the exact cost breakdown for 7 days in Tokyo with a $3000 budget",
-    "taskType": "precise"
+    "query": "What are the essential must-visit places in Paris?",
+    "mode": "focused"
   }'
 ```
 
 #### 2. Creative Query Test
 ```bash
-curl -X POST http://localhost:4000/api/top-k \
+curl -X POST http://localhost:4000/api/top-p \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Describe the magical experience of watching sunset over Santorini",
-    "taskType": "creative"
+    "query": "Show me hidden gems and unique experiences in Barcelona",
+    "mode": "creative"
   }'
 ```
 
-#### 3. Top-K Comparison Test
+#### 3. Top-P Comparison Test
 ```bash
-curl -X POST http://localhost:4000/api/top-k/compare \
+curl -X POST http://localhost:4000/api/top-p/compare \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Tell me about visiting Tokyo"
+    "query": "Recommend restaurants in Barcelona"
   }'
 ```
 
-#### 4. Diversity Demonstration Test
+#### 4. Dynamic Top-P Test
 ```bash
-curl -X POST http://localhost:4000/api/top-k/diversity \
+curl -X POST http://localhost:4000/api/top-p/dynamic \
   -H "Content-Type: application/json" \
   -d '{
-    "query": "Suggest some local dishes to try in Thailand",
-    "topK": 20,
-    "runs": 3
+    "query": "Plan activities in Amsterdam",
+    "preferences": {
+      "seekingPopular": false,
+      "wantsUnique": true,
+      "riskTolerance": "high"
+    }
   }'
 ```
 
 ## 🎬 Video Script (5-7 minutes)
 
 ### **Opening (0:00-0:30)**
-"Welcome to Step 10 of Only Explore! Today I'm implementing Top-K Sampling - a crucial AI decoding strategy that controls response diversity by limiting the number of word choices the model considers. This lets us balance predictability with creativity in our travel assistant responses."
+"Welcome to Step 10 of Only Explore! Today I'm implementing Top-P, also known as Nucleus Sampling - an advanced technique that dynamically controls vocabulary diversity in AI responses. This gives us precise control over how conservative or creative our travel recommendations become."
 
-### **Understanding Top-K Sampling (0:30-1:15)**
-"Top-K sampling works by limiting the model's word choices. Instead of considering all possible next words, the model only looks at the top K most likely words and picks randomly from those. Think of it like a restaurant menu - if K=5, you only see the 5 most popular dishes. If K=50, you see a much wider variety.
+### **Understanding Top-P vs Temperature (0:30-1:15)**
+"While temperature controls randomness in word selection, Top-P controls which words are even available for selection. Top-P 0.5 means the AI only considers the smallest set of words that make up 50% of the probability mass - very conservative choices. Top-P 0.9 allows 90% of the probability space - much more diverse vocabulary.
 
-This controls diversity: Lower K values like 5 produce more predictable, consistent responses perfect for itinerary planning. Higher K values like 50 generate more diverse, varied responses ideal for creative storytelling."
+The key advantage: Top-P adapts dynamically. For predictable scenarios, fewer words are needed. For creative tasks, more vocabulary becomes available automatically."
 
-### **Implementation Strategy (1:15-2:30)**
-"I implemented three Top-K profiles for Only Explore: Precise mode uses K=5 for focused, consistent responses like budget calculations. Balanced mode uses K=20 for varied but relevant recommendations. Creative mode uses K=50 for diverse, imaginative content.
+### **Implementation for Travel Planning (1:15-2:30)**
+"I implemented three Top-P modes for Only Explore: Focused mode uses Top-P 0.5 for essential travel information - must-visit places, safety guidelines, proven itineraries. Balanced mode uses Top-P 0.8 for general recommendations mixing popular with unique options. Creative mode uses Top-P 0.95 for hidden gems, storytelling, and off-the-beaten-path experiences.
 
-The system automatically detects which K value to use based on query analysis - words like 'calculate' and 'exact' trigger precise mode, while 'describe' and 'story' activate creative mode."
+The system automatically detects which mode to use - words like 'essential' and 'must-visit' trigger focused mode, while 'hidden' and 'unique' activate creative mode."
 
-### **Live Demo - Same Query, Different K Values (2:30-4:30)**
+### **Live Demo - Vocabulary Control in Action (2:30-4:30)**
 "Let me demonstrate with the query 'Suggest restaurants in Rome':
 
-Precise mode (K=5): Produces focused, consistent recommendations - always mentions the same top restaurants, very predictable responses.
+Focused mode (Top-P 0.5): Returns well-established, highly-rated restaurants that most tourists know and love - safe, reliable choices with limited vocabulary variation.
 
-Balanced mode (K=20): Provides varied but relevant suggestions - different restaurants each time, but all high-quality and appropriate.
+Balanced mode (Top-P 0.8): Provides mix of famous spots plus some interesting local favorites - moderate vocabulary diversity allowing both expected and surprising suggestions.
 
-Creative mode (K=50): Generates diverse, imaginative recommendations - includes hidden gems, unique experiences, varied descriptions.
+Creative mode (Top-P 0.95): Discovers hidden trattorias, unique dining experiences, local secrets - uses diverse vocabulary to describe unconventional options most travelers wouldn't find.
 
-Notice how the same AI becomes three different assistants based on K values."
+Notice how the vocabulary richness and suggestion diversity changes dramatically with Top-P settings."
 
-### **Diversity Demonstration (4:30-5:30)**
-"The system includes a diversity demonstration that runs the same query multiple times with the same K value. With K=5, you'll see very similar responses across runs. With K=50, you'll see much more variety.
+### **Dynamic Top-P Adjustment (4:30-5:30)**
+"I built dynamic Top-P that adjusts based on user preferences and risk tolerance. Risk-averse travelers get lower Top-P for conservative recommendations. Adventure seekers get higher Top-P for diverse, unique suggestions.
 
-This is particularly useful for travel planning - users can choose whether they want consistent, reliable recommendations or diverse, varied suggestions. It's like choosing between a trusted guidebook (low K) or an adventurous local guide (high K)."
+The system can also adjust mid-conversation - if someone asks for 'popular attractions' followed by 'something more unique,' the Top-P automatically shifts from focused to creative mode, maintaining conversation flow while adapting response style."
 
-### **Travel-Specific Applications (5:30-6:15)**
-"Top-K sampling is powerful for travel planning because different aspects require different approaches:
+### **Travel-Specific Benefits (5:30-6:15)**
+"Top-P is particularly powerful for travel because different aspects of trip planning need different vocabulary ranges:
 
-- Itinerary planning and budget calculations need precise, consistent responses (low K)
-- Restaurant recommendations and activity suggestions benefit from variety while staying relevant (medium K)
-- Destination descriptions and travel stories shine with diverse, imaginative language (high K)
+- Safety information requires focused vocabulary - clear, unambiguous guidance
+- Restaurant recommendations benefit from balanced variety - mix familiar with surprising
+- Experience descriptions thrive with creative vocabulary - rich, diverse language
 
-This creates a more sophisticated travel assistant that adapts its response style to match the user's specific needs."
+This creates a travel assistant that speaks differently for different needs while maintaining coherence."
 
-### **Benefits for Only Explore (6:15-6:45)**
-"Top-K sampling gives Only Explore several key advantages:
-- Predictable accuracy for important factual information
-- Engaging variety for recommendations and suggestions
-- Automatic optimization based on query type
-- Consistent user experience matching expectations
-- Professional flexibility across different travel planning needs"
+### **Technical Innovation (6:15-6:45)**
+"The implementation includes automatic mode detection, dynamic adjustment based on user preferences, and comparison tools showing all three modes side-by-side. Combined with temperature control from Step 9, we now have dual-axis control: temperature manages selection randomness, Top-P manages vocabulary availability.
+
+This gives unprecedented control over response style and creativity levels."
 
 ### **Closing (6:45-7:00)**
-"That's Step 10 complete! Top-K sampling adds sophisticated response diversity control to Only Explore, ensuring the right balance of predictability and creativity for every travel query. Our AI assistant now intelligently adapts from focused calculator to creative storyteller. Thanks for following this comprehensive AI development journey!"
+"That's Step 10 complete! Top-P sampling adds sophisticated vocabulary control to Only Explore, ensuring the right level of suggestion diversity for every travel scenario. Our AI assistant now has fine-grained control over both creativity and vocabulary richness. Thanks for following this comprehensive AI parameter optimization journey!"
 
 ## 🔄 Complete Only Explore System - 10 Steps
 
@@ -276,43 +276,43 @@ You now have a comprehensive AI travel assistant with **10 advanced features**:
 7. ✅ **Multi-Shot Prompting** - AI masters patterns from multiple examples
 8. ✅ **Dynamic Prompting** - AI adapts to user context and real-time data
 9. ✅ **Temperature Control** - AI optimizes creativity vs. reliability
-10. ✅ **Top-K Sampling** - AI controls response diversity through word choice limitation
+10. ✅ **Top-P Sampling** - AI controls vocabulary diversity dynamically
 
-This represents a production-ready, enterprise-level AI travel assistant demonstrating the complete spectrum of modern AI capabilities, prompting techniques, and decoding strategies! 🚀🎯
+This represents a production-ready, enterprise-level AI travel assistant demonstrating the complete spectrum of modern AI capabilities, prompting techniques, and sophisticated parameter optimization! 🚀🎯
 
 ## 🎯 Key Benefits
 
-### **Response Diversity Control**
-- Precise, consistent responses for calculations and facts
-- Balanced variety for recommendations and advice
-- Diverse, imaginative responses for storytelling
-- Automatic K selection based on query analysis
+### **Vocabulary Diversity Control**
+- Conservative, high-confidence responses for essential information
+- Balanced variety for general recommendations and advice
+- Diverse, imaginative responses for unique experiences
+- Automatic P selection based on query analysis
 
 ### **User Experience**
-- Right level of variety for every query type
+- Right level of vocabulary diversity for every query type
 - Consistent expectations matching query intent
 - Professional flexibility across travel planning needs
 - Intelligent adaptation without manual configuration
 
 ### **Technical Excellence**
-- Three optimized Top-K profiles
+- Three optimized Top-P modes
 - Smart keyword-based detection
 - Side-by-side comparison capabilities
-- Diversity demonstration with multiple runs
+- Dynamic adjustment based on preferences
 
 ### **Educational Value**
-- Demonstrates AI decoding strategies
-- Shows diversity vs. consistency trade-offs
-- Provides practical Top-K applications
+- Demonstrates advanced AI decoding strategies
+- Shows vocabulary vs. consistency trade-offs
+- Provides practical Top-P applications
 - Enables experimentation and learning
 
 ## 🚀 Next Steps
 
-The Only Explore system now includes Top-K sampling, providing:
+The Only Explore system now includes Top-P sampling, providing:
 
-- **Advanced AI Decoding Management**: Sophisticated control over response diversity
+- **Advanced AI Vocabulary Management**: Sophisticated control over response diversity
 - **Query-Specific Optimization**: Automatic adaptation to user needs
-- **Professional Response Quality**: Right balance of variety and consistency
-- **Educational Demonstrations**: Clear examples of K value effects
+- **Professional Response Quality**: Right balance of vocabulary and consistency
+- **Educational Demonstrations**: Clear examples of P value effects
 
-**Only Explore** is now a complete, intelligent travel assistant with advanced AI decoding control! 🌍✈️🎯
+**Only Explore** is now a complete, intelligent travel assistant with advanced AI vocabulary control! 🌍✈️🎯

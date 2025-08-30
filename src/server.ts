@@ -12,6 +12,7 @@ import multiShotRoutes from './routes/multi-shot.js';
 import dynamicPromptingRoutes from './routes/dynamic-prompting.js';
 import temperatureControlRoutes from './routes/temperature-control.js';
 import topKSamplingRoutes from './routes/top-k-sampling.js';
+import topPSamplingRoutes from './routes/top-p-sampling.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -48,6 +49,9 @@ app.use('/api/temperature', temperatureControlRoutes);
 
 // Mount Top-K sampling routes
 app.use('/api/top-k', topKSamplingRoutes);
+
+// Mount Top-P sampling routes
+app.use('/api/top-p', topPSamplingRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -113,7 +117,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling'],
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling'],
     step: 10
   });
 });
@@ -144,4 +148,7 @@ app.listen(port, () => {
   console.log(`🎯 Top-K API: http://localhost:${port}/api/top-k`);
   console.log(`🔬 Compare Top-K: http://localhost:${port}/api/top-k/compare`);
   console.log(`🎲 Diversity Demo: http://localhost:${port}/api/top-k/diversity`);
+  console.log(`🎯 Top-P API: http://localhost:${port}/api/top-p`);
+  console.log(`🔬 Compare Top-P: http://localhost:${port}/api/top-p/compare`);
+  console.log(`🎛️ Dynamic Top-P: http://localhost:${port}/api/top-p/dynamic`);
 });
