@@ -289,3 +289,4 @@ export function detectTaskTypeWithConfidence(query: string): { type: 'itinerary'
 
   return bestMatch;
 }
+

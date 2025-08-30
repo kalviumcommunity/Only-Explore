@@ -9,6 +9,7 @@ import zeroShotRoutes from './routes/zero-shot.js';
 import oneShotRoutes from './routes/one-shot.js';
 import enhancedChatRoutes from './routes/enhanced-chat.js';
 import multiShotRoutes from './routes/multi-shot.js';
+import dynamicPromptingRoutes from './routes/dynamic-prompting.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -36,6 +37,9 @@ app.use('/api/chat', enhancedChatRoutes);
 
 // Mount multi-shot prompting routes
 app.use('/api/multi-shot', multiShotRoutes);
+
+// Mount dynamic prompting routes
+app.use('/api/dynamic', dynamicPromptingRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -101,13 +105,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting'],
-    step: 7
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting'],
+    step: 8
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6 & 7) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7 & 8) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -123,4 +127,7 @@ app.listen(port, () => {
   console.log(`🎯 Multi-shot API: http://localhost:${port}/api/multi-shot`);
   console.log(`🔄 Compare All: http://localhost:${port}/api/multi-shot/compare-all`);
   console.log(`🧪 Test Multi-shot: http://localhost:${port}/api/multi-shot/test`);
+  console.log(`🎯 Dynamic API: http://localhost:${port}/api/dynamic`);
+  console.log(`👤 Personalized: http://localhost:${port}/api/dynamic/personalized`);
+  console.log(`🔄 Continue Chat: http://localhost:${port}/api/dynamic/continue`);
 });
