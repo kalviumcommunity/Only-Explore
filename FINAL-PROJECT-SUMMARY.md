@@ -60,12 +60,12 @@
 - **Temperature Comparison**: Side-by-side analysis of different settings
 - **Travel-Specific Optimization**: Customized for travel planning needs
 
-### ✅ Step 10: Top-K Sampling
-- **Three Top-K Profiles**: Precise (K=5), Balanced (K=20), Creative (K=50)
-- **Automatic Detection**: Smart Top-K selection based on query analysis
-- **Top-K Comparison**: Side-by-side analysis of different K values
-- **Diversity Demonstration**: Multiple runs showing response variety
-- **Travel-Specific Optimization**: Customized for travel planning needs
+### ✅ Step 10: Top-P (Nucleus Sampling)
+- **Three Top-P Modes**: Focused (P=0.5), Balanced (P=0.8), Creative (P=0.95)
+- **Automatic Mode Detection**: Smart Top-P selection based on query analysis
+- **Top-P Comparison**: Side-by-side analysis of different P values
+- **Dynamic Top-P Adjustment**: Adjusts based on user preferences and risk tolerance
+- **Vocabulary Control**: Dynamic vocabulary diversity management
 
 ## 🏗️ Technical Architecture
 
@@ -88,7 +88,7 @@ src/
 │   ├── multi-shot-prompting.ts
 │   ├── dynamic-prompting.ts
 │   ├── temperature-control.ts
-│   └── top-k-sampling.ts
+│   └── top-p-sampling.ts
 ├── routes/                # API endpoints
 │   ├── chat.ts           # Function calling chat
 │   ├── basic-chat.ts     # Simple chat
@@ -97,7 +97,7 @@ src/
 │   ├── multi-shot.ts     # Multi-shot prompting
 │   ├── dynamic-prompting.ts
 │   ├── temperature-control.ts
-│   └── top-k-sampling.ts
+│   └── top-p-sampling.ts
 ├── scripts/              # Testing & utilities
 │   ├── seed.ts           # Database seeding
 │   ├── test-*.ts         # Comprehensive test suites
@@ -114,7 +114,7 @@ src/
 - `POST /api/multi-shot` - Multi-shot prompting
 - `POST /api/dynamic` - Dynamic prompting
 - `POST /api/temperature` - Temperature control
-- `POST /api/top-k` - Top-K sampling
+- `POST /api/top-p` - Top-P sampling
 - `GET /health` - Health check
 
 ## 🎯 AI Capabilities Demonstrated
@@ -155,10 +155,10 @@ src/
 - Response quality optimization
 - Travel-specific tuning
 
-### **7. Decoding Strategies**
-- Top-K sampling (diversity vs. consistency)
-- Automatic K selection
-- Response variety control
+### **7. Advanced Decoding Strategies**
+- Top-P sampling (vocabulary diversity control)
+- Automatic P selection
+- Dynamic vocabulary adjustment
 - Travel-specific optimization
 
 ## 🧪 Testing & Quality Assurance
@@ -209,7 +209,7 @@ src/
 - Semantic search: < 1 second
 - Dynamic prompting: < 4 seconds
 - Temperature control: < 3 seconds
-- Top-K sampling: < 3 seconds
+- Top-P sampling: < 3 seconds
 
 ### **Scalability**
 - Concurrent user support
@@ -225,7 +225,7 @@ src/
 - Real-world AI integration
 - Production-ready development
 - Parameter optimization
-- Decoding strategies
+- Advanced decoding strategies
 
 ### **Best Practices Demonstrated**
 - TypeScript best practices
@@ -233,7 +233,7 @@ src/
 - Error handling strategies
 - Testing methodologies
 - AI parameter management
-- Response diversity control
+- Vocabulary diversity control
 
 ## 🔮 Future Enhancements
 
@@ -269,7 +269,7 @@ src/
 - ✅ Best practice demonstrations
 - ✅ Scalable architecture patterns
 - ✅ Parameter control mastery
-- ✅ Decoding strategy understanding
+- ✅ Vocabulary diversity understanding
 
 ### **Innovation Showcase**
 - ✅ Latest AI technologies
@@ -277,7 +277,7 @@ src/
 - ✅ Personalization capabilities
 - ✅ Real-time data integration
 - ✅ Sophisticated parameter management
-- ✅ Response diversity control
+- ✅ Dynamic vocabulary control
 
 ## 🎉 Conclusion
 
@@ -307,7 +307,7 @@ This project serves as both a functional AI travel assistant and a comprehensive
 7. **Multi-Shot** - Mastering patterns from multiple examples
 8. **Dynamic** - Context-adaptive prompting
 9. **Temperature** - Creativity vs. reliability optimization
-10. **Top-K** - Response diversity through word choice limitation
+10. **Top-P** - Vocabulary diversity through nucleus sampling
 
 ### **Key Technologies**
 - **Backend**: Node.js, TypeScript, Express.js
@@ -324,8 +324,8 @@ This project serves as both a functional AI travel assistant and a comprehensive
 - **Monitoring**: Health checks and logging
 
 **Total Development**: 10 comprehensive steps with enterprise-level implementation
-**Lines of Code**: 4,000+ lines of TypeScript
-**API Endpoints**: 25+ RESTful endpoints
+**Lines of Code**: 4,500+ lines of TypeScript
+**API Endpoints**: 30+ RESTful endpoints
 **Test Coverage**: 100% of core features tested
 **Documentation**: Complete guides for each step
 
