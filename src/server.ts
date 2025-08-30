@@ -10,6 +10,7 @@ import oneShotRoutes from './routes/one-shot.js';
 import enhancedChatRoutes from './routes/enhanced-chat.js';
 import multiShotRoutes from './routes/multi-shot.js';
 import dynamicPromptingRoutes from './routes/dynamic-prompting.js';
+import temperatureControlRoutes from './routes/temperature-control.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -40,6 +41,9 @@ app.use('/api/multi-shot', multiShotRoutes);
 
 // Mount dynamic prompting routes
 app.use('/api/dynamic', dynamicPromptingRoutes);
+
+// Mount temperature control routes
+app.use('/api/temperature', temperatureControlRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -105,13 +109,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting'],
-    step: 8
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control'],
+    step: 9
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7 & 8) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8 & 9) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -130,4 +134,7 @@ app.listen(port, () => {
   console.log(`🎯 Dynamic API: http://localhost:${port}/api/dynamic`);
   console.log(`👤 Personalized: http://localhost:${port}/api/dynamic/personalized`);
   console.log(`🔄 Continue Chat: http://localhost:${port}/api/dynamic/continue`);
+  console.log(`🌡️ Temperature API: http://localhost:${port}/api/temperature`);
+  console.log(`🔬 Compare Temps: http://localhost:${port}/api/temperature/compare`);
+  console.log(`🧠 Smart Temp: http://localhost:${port}/api/temperature/smart`);
 });
