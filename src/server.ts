@@ -11,6 +11,7 @@ import enhancedChatRoutes from './routes/enhanced-chat.js';
 import multiShotRoutes from './routes/multi-shot.js';
 import dynamicPromptingRoutes from './routes/dynamic-prompting.js';
 import temperatureControlRoutes from './routes/temperature-control.js';
+import topKSamplingRoutes from './routes/top-k-sampling.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -44,6 +45,9 @@ app.use('/api/dynamic', dynamicPromptingRoutes);
 
 // Mount temperature control routes
 app.use('/api/temperature', temperatureControlRoutes);
+
+// Mount Top-K sampling routes
+app.use('/api/top-k', topKSamplingRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -109,13 +113,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control'],
-    step: 9
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling'],
+    step: 10
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8 & 9) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9 & 10) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -137,4 +141,7 @@ app.listen(port, () => {
   console.log(`🌡️ Temperature API: http://localhost:${port}/api/temperature`);
   console.log(`🔬 Compare Temps: http://localhost:${port}/api/temperature/compare`);
   console.log(`🧠 Smart Temp: http://localhost:${port}/api/temperature/smart`);
+  console.log(`🎯 Top-K API: http://localhost:${port}/api/top-k`);
+  console.log(`🔬 Compare Top-K: http://localhost:${port}/api/top-k/compare`);
+  console.log(`🎲 Diversity Demo: http://localhost:${port}/api/top-k/diversity`);
 });
