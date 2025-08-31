@@ -17,6 +17,7 @@ import stopSequenceRoutes from './routes/stop-sequences.js';
 import cosineSimilarityRoutes from './routes/cosine-similarity.js';
 import chainOfThoughtRoutes from './routes/chain-of-thought.js';
 import rtfcRoutes from './routes/system-user-prompting.js';
+import ragRoutes from './routes/rag.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -68,6 +69,9 @@ app.use('/api/chain-of-thought', chainOfThoughtRoutes);
 
 // Mount RTFC Framework routes
 app.use('/api/rtfc', rtfcRoutes);
+
+// Mount RAG routes
+app.use('/api/rag', ragRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -133,13 +137,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework'],
-    step: 14
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag'],
+    step: 15
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 & 14) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 & 15) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -179,4 +183,7 @@ app.listen(port, () => {
   console.log(`📋 RTFC Framework API: http://localhost:${port}/api/rtfc`);
   console.log(`🔬 Compare Prompts: http://localhost:${port}/api/rtfc/compare`);
   console.log(`🎯 Advanced RTFC: http://localhost:${port}/api/rtfc/advanced`);
+  console.log(`🔍 RAG API: http://localhost:${port}/api/rag`);
+  console.log(`🔬 Compare RAG: http://localhost:${port}/api/rag/compare`);
+  console.log(`🚀 Advanced RAG: http://localhost:${port}/api/rag/advanced`);
 });
