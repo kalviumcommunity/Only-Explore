@@ -4,7 +4,7 @@
 // For now, we'll comment out the axios usage to avoid build errors
 // import axios from 'axios';
 
-const BASE_URL = 'http://localhost:4000';
+const TEMPERATURE_BASE_URL = 'http://localhost:4000';
 
 async function testTemperatureControl() {
   console.log('🌡️ Testing Temperature Control - Step 9\n');

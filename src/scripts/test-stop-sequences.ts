@@ -4,7 +4,7 @@
 // For now, we'll comment out the axios usage to avoid build errors
 // import axios from 'axios';
 
-const BASE_URL = 'http://localhost:4000';
+const STOP_SEQUENCES_BASE_URL = 'http://localhost:4000';
 
 async function testStopSequences() {
   console.log('⏹️ Testing Stop Sequences - Step 11\n');
@@ -18,7 +18,7 @@ async function testStopSequences() {
   try {
     // Test 1: Itinerary Query (Structured daily plans)
     console.log('1️⃣ Testing Itinerary Query (Structured daily plans)...');
-    const itineraryQuery = await axios.post(`${BASE_URL}/api/stop-sequences`, {
+    const itineraryQuery = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences`, {
       query: "Plan a 3-day itinerary for Rome with historical sites",
       responseType: "itinerary"
     });
@@ -32,7 +32,7 @@ async function testStopSequences() {
 
     // Test 2: List Query (Clean numbered lists)
     console.log('2️⃣ Testing List Query (Clean numbered lists)...');
-    const listQuery = await axios.post(`${BASE_URL}/api/stop-sequences`, {
+    const listQuery = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences`, {
       query: "List the top 5 restaurants in Tokyo for sushi lovers",
       responseType: "list"
     });
@@ -46,7 +46,7 @@ async function testStopSequences() {
 
     // Test 3: Budget Query (Structured financial breakdowns)
     console.log('3️⃣ Testing Budget Query (Structured financial breakdowns)...');
-    const budgetQuery = await axios.post(`${BASE_URL}/api/stop-sequences`, {
+    const budgetQuery = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences`, {
       query: "What is the cost breakdown for a week in Thailand?",
       responseType: "budget"
     });
@@ -60,7 +60,7 @@ async function testStopSequences() {
 
     // Test 4: Smart Response Type Detection
     console.log('4️⃣ Testing Smart Response Type Detection...');
-    const smartQuery = await axios.post(`${BASE_URL}/api/stop-sequences`, {
+    const smartQuery = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences`, {
       query: "What should I know about traveling to Japan?"
     });
 
@@ -72,7 +72,7 @@ async function testStopSequences() {
 
     // Test 5: Stop Sequence Comparison
     console.log('5️⃣ Testing Stop Sequence Comparison...');
-    const comparison = await axios.post(`${BASE_URL}/api/stop-sequences/compare`, {
+    const comparison = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences/compare`, {
       query: "List the top 5 street foods in Bangkok"
     });
 
@@ -86,7 +86,7 @@ async function testStopSequences() {
 
     // Test 6: Custom Stop Sequences
     console.log('6️⃣ Testing Custom Stop Sequences...');
-    const customQuery = await axios.post(`${BASE_URL}/api/stop-sequences/custom`, {
+    const customQuery = await axios.post(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences/custom`, {
       query: "Describe morning, afternoon, and evening in Paris",
       stops: ["AFTERNOON:", "EVENING:", "CONCLUSION:"]
     });
@@ -99,7 +99,7 @@ async function testStopSequences() {
 
     // Test 7: Comprehensive Test Scenarios
     console.log('7️⃣ Testing Comprehensive Scenarios...');
-    const testScenarios = await axios.get(`${BASE_URL}/api/stop-sequences/test`);
+    const testScenarios = await axios.get(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences/test`);
 
     console.log('✅ Test Scenarios Response:');
     console.log(`Accuracy: ${testScenarios.data.accuracy}`);
@@ -115,7 +115,7 @@ async function testStopSequences() {
 
     // Test 8: Stop Sequence Information
     console.log('8️⃣ Getting Stop Sequence Information...');
-    const info = await axios.get(`${BASE_URL}/api/stop-sequences/info`);
+    const info = await axios.get(`${STOP_SEQUENCES_BASE_URL}/api/stop-sequences/info`);
 
     console.log('✅ Stop Sequence Information:');
     console.log(`Itinerary: ${info.data.stopSequencePresets.itinerary.description}`);

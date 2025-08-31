@@ -40,10 +40,10 @@ const functionDeclarations = [
     name: "searchHotels",
     description: "Get hotel recommendations in a specific city",
     parameters: {
-      type: "object",
+      type: "object" as const,
       properties: {
         city: { 
-          type: "string", 
+          type: "string" as const, 
           description: "City name to search hotels in" 
         }
       },
@@ -54,10 +54,10 @@ const functionDeclarations = [
     name: "getLocalCuisine", 
     description: "Get famous cuisine and food recommendations for a city",
     parameters: {
-      type: "object",
+      type: "object" as const,
       properties: {
         city: { 
-          type: "string", 
+          type: "string" as const, 
           description: "City name to get cuisine information for" 
         }
       },
@@ -68,11 +68,11 @@ const functionDeclarations = [
     name: "findFlights",
     description: "Search for flights between two cities on a specific date",
     parameters: {
-      type: "object", 
+      type: "object" as const, 
       properties: {
-        from: { type: "string", description: "Departure city" },
-        to: { type: "string", description: "Destination city" },
-        date: { type: "string", description: "Travel date in YYYY-MM-DD format" }
+        from: { type: "string" as const, description: "Departure city" },
+        to: { type: "string" as const, description: "Destination city" },
+        date: { type: "string" as const, description: "Travel date in YYYY-MM-DD format" }
       },
       required: ["from", "to", "date"]
     }
@@ -84,7 +84,7 @@ export async function processFunctionCallingChat(message: string) {
     // Step 1: Initialize model with function calling capability
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
-      tools: [{ functionDeclarations }]
+      tools: [{ functionDeclarations: functionDeclarations as any }]
     });
 
     const chat = model.startChat();
@@ -118,13 +118,13 @@ export async function processFunctionCallingChat(message: string) {
     // Execute the appropriate function
     switch (functionName) {
       case 'searchHotels':
-        functionResult = functions.searchHotels(functionArgs.city);
+        functionResult = functions.searchHotels((functionArgs as any).city);
         break;
       case 'getLocalCuisine':
-        functionResult = functions.getLocalCuisine(functionArgs.city);
+        functionResult = functions.getLocalCuisine((functionArgs as any).city);
         break;
       case 'findFlights':
-        functionResult = functions.findFlights(functionArgs.from, functionArgs.to, functionArgs.date);
+        functionResult = functions.findFlights((functionArgs as any).from, (functionArgs as any).to, (functionArgs as any).date);
         break;
       default:
         functionResult = { error: `Function ${functionName} not implemented` };

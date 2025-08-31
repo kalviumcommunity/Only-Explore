@@ -4,7 +4,7 @@
 // For now, we'll comment out the axios usage to avoid build errors
 // import axios from 'axios';
 
-const BASE_URL = 'http://localhost:4000';
+const TOP_K_BASE_URL = 'http://localhost:4000';
 
 async function testTopKSampling() {
   console.log('🎯 Testing Top-K Sampling - Step 10\n');

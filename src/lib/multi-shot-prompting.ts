@@ -276,14 +276,14 @@ export function detectTaskTypeWithConfidence(query: string): { type: 'itinerary'
     culture: ['culture', 'tradition', 'custom', 'experience', 'local', 'people', 'lifestyle']
   };
 
-  let bestMatch = { type: 'itinerary' as const, confidence: 0 };
+  let bestMatch: { type: 'itinerary' | 'cuisine' | 'budget' | 'culture', confidence: number } = { type: 'itinerary', confidence: 0 };
 
   for (const [type, keywords] of Object.entries(patterns)) {
     const matches = keywords.filter(keyword => queryLower.includes(keyword)).length;
     const confidence = matches / keywords.length;
     
     if (confidence > bestMatch.confidence) {
-      bestMatch = { type: type as keyof typeof patterns, confidence };
+      bestMatch = { type: type as 'itinerary' | 'cuisine' | 'budget' | 'culture', confidence };
     }
   }
 
