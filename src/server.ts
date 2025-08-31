@@ -18,6 +18,7 @@ import cosineSimilarityRoutes from './routes/cosine-similarity.js';
 import chainOfThoughtRoutes from './routes/chain-of-thought.js';
 import rtfcRoutes from './routes/system-user-prompting.js';
 import ragRoutes from './routes/rag.js';
+import dotProductSimilarityRoutes from './routes/dot-product-similarity.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -72,6 +73,9 @@ app.use('/api/rtfc', rtfcRoutes);
 
 // Mount RAG routes
 app.use('/api/rag', ragRoutes);
+
+// Mount Dot Product Similarity routes
+app.use('/api/dot-product', dotProductSimilarityRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -137,7 +141,7 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag'],
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag', 'dot_product_similarity'],
     step: 15
   });
 });
@@ -186,4 +190,7 @@ app.listen(port, () => {
   console.log(`🔍 RAG API: http://localhost:${port}/api/rag`);
   console.log(`🔬 Compare RAG: http://localhost:${port}/api/rag/compare`);
   console.log(`🚀 Advanced RAG: http://localhost:${port}/api/rag/advanced`);
+  console.log(`🔍 Dot Product API: http://localhost:${port}/api/dot-product`);
+  console.log(`🔬 Compare Similarities: http://localhost:${port}/api/dot-product/compare`);
+  console.log(`🎯 Weighted Dot Product: http://localhost:${port}/api/dot-product/weighted`);
 });
