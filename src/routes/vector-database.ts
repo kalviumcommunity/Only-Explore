@@ -1,409 +1,335 @@
 // src/routes/vector-database.ts
 import express from 'express';
 import { 
-  vectorDB, 
-  initializeVectorDatabase, 
-  performAdvancedVectorSearch, 
-  compareSearchStrategies,
-  sampleTravelDocuments 
+  VectorDatabase, 
+  createVectorDatabase, 
+  sampleTravelDestinations,
+  compareVectorDatabases 
 } from '../lib/vector-database.js';
 
 const router = express.Router();
 
+// Global vector database instance
+let vectorDB: VectorDatabase | null = null;
+
 /**
- * Vector database similarity search
- * POST /api/vector-database
+ * Initialize vector database
+ * POST /api/vector-db/initialize
  */
-router.post('/', async (req, res) => {
+router.post('/initialize', async (req, res) => {
   try {
-    const { query, topK = 10, threshold = 0.1, searchType = 'similarity' } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
+    const { provider, indexName, namespace } = req.body;
+
+    if (!provider || !['pinecone', 'weaviate', 'local'].includes(provider)) {
+      return res.status(400).json({ 
+        error: 'Valid provider required (pinecone, weaviate, local)' 
+      });
     }
 
-    console.log(`🔍 Vector database search: "${query}" with ${searchType} strategy`);
+    console.log(`🚀 Initializing ${provider} vector database`);
 
-    const results = await vectorDB.search({
-      query,
-      topK,
-      threshold,
-      searchType: searchType as any
+    vectorDB = createVectorDatabase({
+      provider,
+      indexName,
+      namespace
     });
+
+    await vectorDB.initialize();
+
+    res.json({
+      message: `Vector database ${provider} initialized successfully`,
+      provider,
+      indexName: indexName || 'default',
+      namespace: namespace || 'default',
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Vector DB initialization error:', error);
+    res.status(500).json({ 
+      error: 'Failed to initialize vector database' 
+    });
+  }
+});
+
+/**
+ * Upsert sample travel data
+ * POST /api/vector-db/seed
+ */
+router.post('/seed', async (req, res) => {
+  try {
+    if (!vectorDB) {
+      return res.status(400).json({ 
+        error: 'Vector database not initialized. Call /initialize first.' 
+      });
+    }
+
+    console.log('🌱 Seeding vector database with sample travel destinations');
+
+    await vectorDB.upsertDocuments(sampleTravelDestinations);
+
+    const stats = await vectorDB.getStats();
+
+    res.json({
+      message: 'Sample travel destinations upserted successfully',
+      documentsUpserted: sampleTravelDestinations.length,
+      stats,
+      destinations: sampleTravelDestinations.map(d => ({
+        id: d.id,
+        title: d.title,
+        category: d.category,
+        location: d.location
+      })),
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Vector DB seed error:', error);
+    res.status(500).json({ 
+      error: 'Failed to seed vector database' 
+    });
+  }
+});
+
+/**
+ * Search similar destinations
+ * POST /api/vector-db/search
+ */
+router.post('/search', async (req, res) => {
+  try {
+    const { query, topK, filter } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ 
+        error: 'Search query is required' 
+      });
+    }
+
+    if (!vectorDB) {
+      return res.status(400).json({ 
+        error: 'Vector database not initialized. Call /initialize first.' 
+      });
+    }
+
+    console.log(`🔍 Vector search: "${query}"`);
+
+    const results = await vectorDB.searchSimilar(query, topK || 5, filter);
 
     res.json({
       query,
       results: results.map(r => ({
         id: r.id,
-        title: r.metadata.title,
-        category: r.metadata.category,
-        location: r.metadata.location,
-        type: r.metadata.type,
+        title: r.title,
+        content: r.content.substring(0, 150) + '...',
         score: parseFloat(r.score.toFixed(4)),
-        tags: r.metadata.tags,
-        rating: r.metadata.rating,
-        price: r.metadata.price
+        category: r.metadata?.category,
+        location: r.metadata?.location,
+        tags: r.metadata?.tags
       })),
-      searchType,
-      parameters: { topK, threshold },
+      totalResults: results.length,
       method: 'vector-database-search',
       timestamp: new Date().toISOString()
     });
+
   } catch (error) {
-    console.error('Vector database search error:', error);
-    res.status(500).json({ error: 'Internal server error during vector search' });
+    console.error('Vector search error:', error);
+    res.status(500).json({ 
+      error: 'Vector search failed' 
+    });
   }
 });
 
 /**
- * Hybrid search combining vector similarity with metadata matching
- * POST /api/vector-database/hybrid
- */
-router.post('/hybrid', async (req, res) => {
-  try {
-    const { query, metadataBoost = {}, topK = 10 } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
-    }
-
-    console.log(`🔍 Hybrid search: "${query}" with metadata boost`);
-
-    const results = await vectorDB.hybridSearch(query, metadataBoost, topK);
-
-    res.json({
-      query,
-      results: results.map(r => ({
-        id: r.id,
-        title: r.metadata.title,
-        category: r.metadata.category,
-        location: r.metadata.location,
-        type: r.metadata.type,
-        score: parseFloat(r.score.toFixed(4)),
-        tags: r.metadata.tags,
-        rating: r.metadata.rating,
-        price: r.metadata.price
-      })),
-      metadataBoost,
-      searchType: 'hybrid',
-      method: 'vector-database-hybrid',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Hybrid search error:', error);
-    res.status(500).json({ error: 'Internal server error during hybrid search' });
-  }
-});
-
-/**
- * Filtered search with metadata constraints
- * POST /api/vector-database/filtered
- */
-router.post('/filtered', async (req, res) => {
-  try {
-    const { query, filters, topK = 10, threshold = 0.1 } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
-    }
-
-    console.log(`🔍 Filtered search: "${query}" with filters`);
-
-    const results = await vectorDB.search({
-      query,
-      topK,
-      threshold,
-      filters,
-      searchType: 'filtered'
-    });
-
-    res.json({
-      query,
-      filters,
-      results: results.map(r => ({
-        id: r.id,
-        title: r.metadata.title,
-        category: r.metadata.category,
-        location: r.metadata.location,
-        type: r.metadata.type,
-        score: parseFloat(r.score.toFixed(4)),
-        tags: r.metadata.tags,
-        rating: r.metadata.rating,
-        price: r.metadata.price
-      })),
-      searchType: 'filtered',
-      method: 'vector-database-filtered',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Filtered search error:', error);
-    res.status(500).json({ error: 'Internal server error during filtered search' });
-  }
-});
-
-/**
- * Compare different search strategies
- * POST /api/vector-database/compare
+ * Compare different vector database providers
+ * POST /api/vector-db/compare
  */
 router.post('/compare', async (req, res) => {
   try {
     const { query } = req.body;
-    
+
     if (!query) {
-      return res.status(400).json({ error: 'Query is required for comparison' });
+      return res.status(400).json({ error: 'Query required for comparison' });
     }
 
-    console.log(`🔬 Comparing search strategies for: "${query}"`);
+    console.log(`🔬 Comparing vector databases for: "${query}"`);
 
-    const comparison = await compareSearchStrategies(query);
+    const comparison = await compareVectorDatabases(query);
 
     res.json({
       query,
-      similarity: {
-        results: comparison.similarity.map(r => ({
-          title: r.metadata.title,
+      comparison: {
+        local: comparison.local.map(r => ({
+          title: r.title,
           score: parseFloat(r.score.toFixed(4)),
-          category: r.metadata.category
+          provider: 'local'
         })),
-        averageScore: parseFloat(comparison.analysis.similarityAvg.toFixed(4))
+        ...(comparison.pinecone && {
+          pinecone: comparison.pinecone.map(r => ({
+            title: r.title,
+            score: parseFloat(r.score.toFixed(4)),
+            provider: 'pinecone'
+          }))
+        })
       },
-      hybrid: {
-        results: comparison.hybrid.map(r => ({
-          title: r.metadata.title,
-          score: parseFloat(r.score.toFixed(4)),
-          category: r.metadata.category
-        })),
-        averageScore: parseFloat(comparison.analysis.hybridAvg.toFixed(4))
+      insights: {
+        local: 'Fast development, limited scale, good for prototyping',
+        pinecone: 'Production-ready, highly scalable, managed service',
+        recommendation: 'Use local for development, Pinecone for production'
       },
-      filtered: {
-        results: comparison.filtered.map(r => ({
-          title: r.metadata.title,
-          score: parseFloat(r.score.toFixed(4)),
-          category: r.metadata.category
-        })),
-        averageScore: parseFloat(comparison.analysis.filteredAvg.toFixed(4))
-      },
-      analysis: {
-        overlap: comparison.analysis.overlap,
-        insights: {
-          similarity: 'Pure vector similarity search',
-          hybrid: 'Combines vector similarity with metadata matching',
-          filtered: 'Vector similarity with metadata constraints'
-        }
-      },
-      method: 'vector-database-comparison',
+      comparisonSummary: comparison.comparison,
       timestamp: new Date().toISOString()
     });
+
   } catch (error) {
-    console.error('Search strategy comparison error:', error);
-    res.status(500).json({ error: 'Search strategy comparison failed' });
-  }
-});
-
-/**
- * Advanced vector search with multiple options
- * POST /api/vector-database/advanced
- */
-router.post('/advanced', async (req, res) => {
-  try {
-    const { query, options } = req.body;
-    
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
-    }
-
-    console.log(`🎯 Advanced vector search: "${query}"`);
-
-    const result = await performAdvancedVectorSearch(query, options);
-
-    res.json({
-      query,
-      results: result.results.map(r => ({
-        id: r.id,
-        title: r.metadata.title,
-        category: r.metadata.category,
-        location: r.metadata.location,
-        type: r.metadata.type,
-        score: parseFloat(r.score.toFixed(4)),
-        tags: r.metadata.tags,
-        rating: r.metadata.rating,
-        price: r.metadata.price
-      })),
-      searchType: result.searchType,
-      queryVectorLength: result.queryVector.length,
-      databaseStats: result.stats,
-      method: 'vector-database-advanced',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Advanced vector search error:', error);
-    res.status(500).json({ error: 'Advanced vector search failed' });
-  }
-});
-
-/**
- * Initialize vector database with sample data
- * POST /api/vector-database/initialize
- */
-router.post('/initialize', async (req, res) => {
-  try {
-    console.log('🚀 Initializing vector database...');
-    
-    await initializeVectorDatabase();
-    const stats = vectorDB.getStats();
-
-    res.json({
-      message: 'Vector database initialized successfully',
-      stats,
-      sampleDocuments: sampleTravelDocuments.length,
-      method: 'vector-database-initialization',
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Vector database initialization error:', error);
-    res.status(500).json({ error: 'Vector database initialization failed' });
+    console.error('Vector DB comparison error:', error);
+    res.status(500).json({ error: 'Vector database comparison failed' });
   }
 });
 
 /**
  * Get vector database statistics
- * GET /api/vector-database/stats
+ * GET /api/vector-db/stats
  */
-router.get('/stats', (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
-    const stats = vectorDB.getStats();
-    
+    if (!vectorDB) {
+      return res.status(400).json({ 
+        error: 'Vector database not initialized' 
+      });
+    }
+
+    const stats = await vectorDB.getStats();
+
     res.json({
       stats,
       method: 'vector-database-stats',
       timestamp: new Date().toISOString()
     });
+
   } catch (error) {
-    console.error('Error getting vector database stats:', error);
-    res.status(500).json({ error: 'Failed to get database statistics' });
+    console.error('Vector DB stats error:', error);
+    res.status(500).json({ error: 'Failed to get vector database stats' });
   }
 });
 
 /**
  * Test vector database with travel scenarios
- * GET /api/vector-database/test
+ * GET /api/vector-db/test
  */
 router.get('/test', async (req, res) => {
   const testScenarios = [
     {
-      query: 'romantic beach destinations',
-      expectedCategories: ['beach'],
-      description: 'Beach destinations for romantic getaways'
+      query: 'romantic beach destination with nightlife',
+      expected: 'Should find Goa and Bali',
+      description: 'Beach + romantic + nightlife query'
     },
     {
-      query: 'adventure mountain activities',
-      expectedCategories: ['mountain'],
-      description: 'Mountain destinations for adventure activities'
+      query: 'mountain adventure with trekking and snow',
+      expected: 'Should find Manali and Swiss Alps',
+      description: 'Mountain + adventure + snow query'
     },
     {
-      query: 'cultural heritage experiences',
-      expectedCategories: ['culture'],
-      description: 'Cultural destinations for heritage experiences'
+      query: 'traditional cultural temples and spirituality',
+      expected: 'Should find Kyoto',
+      description: 'Culture + traditional + spiritual query'
     },
     {
-      query: 'budget food experiences',
-      expectedCategories: ['food'],
-      description: 'Budget-friendly food experiences'
-    },
-    {
-      query: 'peaceful nature retreats',
-      expectedCategories: ['nature'],
-      description: 'Peaceful nature-based retreats'
+      query: 'luxury alpine skiing resort experience',
+      expected: 'Should find Swiss Alps',
+      description: 'Luxury + alpine + skiing query'
     }
   ];
 
   try {
-    const results = [];
-    
-    for (const scenario of testScenarios) {
-      console.log(`🧪 Testing vector database: ${scenario.description}`);
-      
-      const searchResults = await vectorDB.search({
-        query: scenario.query,
-        topK: 3,
-        threshold: 0.1
-      });
+    // Initialize local vector DB for testing
+    const testVectorDB = createVectorDatabase({ provider: 'local' });
+    await testVectorDB.initialize();
+    await testVectorDB.upsertDocuments(sampleTravelDestinations);
 
-      const topResult = searchResults[0];
-      const expectedMatch = topResult && scenario.expectedCategories.includes(topResult.metadata.category);
+    const results = [];
+
+    for (const scenario of testScenarios) {
+      console.log(`🧪 Testing vector search: ${scenario.description}`);
+      
+      const searchResults = await testVectorDB.searchSimilar(scenario.query, 3);
 
       results.push({
         query: scenario.query,
-        expectedCategories: scenario.expectedCategories,
-        topResult: topResult ? {
-          title: topResult.metadata.title,
-          category: topResult.metadata.category,
-          score: parseFloat(topResult.score.toFixed(4))
-        } : null,
-        expectedMatch,
-        totalResults: searchResults.length,
+        expected: scenario.expected,
+        results: searchResults.map(r => ({
+          title: r.title,
+          score: parseFloat(r.score.toFixed(4)),
+          category: r.metadata?.category
+        })),
+        topResult: searchResults[0]?.title,
         description: scenario.description
       });
     }
 
-    const accuracy = results.filter(r => r.expectedMatch).length / results.length;
-
     res.json({
       method: 'vector-database-test',
       testResults: results,
-      accuracy: `${(accuracy * 100).toFixed(1)}%`,
-      summary: `Tested ${testScenarios.length} scenarios with ${(accuracy * 100).toFixed(1)}% accuracy`
+      testDatabase: 'local',
+      totalScenarios: testScenarios.length,
+      summary: `Tested ${testScenarios.length} vector search scenarios`,
+      timestamp: new Date().toISOString()
     });
+
   } catch (error) {
-    console.error('Vector database test error:', error);
+    console.error('Vector DB test error:', error);
     res.status(500).json({ error: 'Vector database test failed' });
   }
 });
 
 /**
  * Get vector database information
- * GET /api/vector-database/info
+ * GET /api/vector-db/info
  */
 router.get('/info', (req, res) => {
   res.json({
-    concept: 'Vector Database Integration enables scalable, efficient semantic search and personalization for travel recommendations',
-    capabilities: {
-      similaritySearch: 'Find documents by vector similarity using embeddings',
-      hybridSearch: 'Combine vector similarity with metadata matching',
-      filteredSearch: 'Apply metadata constraints to vector search',
-      batchOperations: 'Efficient bulk document insertion and processing',
-      metadataIndexing: 'Fast filtering by categories, locations, types, etc.'
-    },
-    searchTypes: {
-      similarity: 'Pure vector similarity search using cosine similarity',
-      hybrid: 'Combines vector similarity with metadata boosts',
-      filtered: 'Vector similarity with metadata constraints'
+    concept: 'Vector databases store and search high-dimensional embeddings for semantic similarity',
+    supportedProviders: {
+      pinecone: {
+        description: 'Fully managed, cloud-native vector database',
+        features: ['High performance', 'Auto-scaling', 'Multi-cloud', 'Real-time updates'],
+        useCases: ['Production applications', 'Large-scale similarity search', 'Real-time recommendations']
+      },
+      weaviate: {
+        description: 'Open-source vector database with GraphQL API',
+        features: ['Hybrid search', 'Multi-modal', 'GraphQL', 'Self-hosted'],
+        useCases: ['Knowledge graphs', 'Hybrid search', 'Multi-modal applications']
+      },
+      local: {
+        description: 'In-memory vector storage for development',
+        features: ['Fast setup', 'No external dependencies', 'Good for prototyping'],
+        useCases: ['Development', 'Testing', 'Small datasets', 'Proof of concepts']
+      }
     },
     travelApplications: {
-      destinationSearch: 'Find destinations by semantic meaning, not just keywords',
-      personalizedRecommendations: 'Match user preferences with relevant destinations',
-      contentDiscovery: 'Discover similar activities, reviews, and itineraries',
-      categoryFiltering: 'Filter results by travel categories and preferences'
+      destinationSearch: 'Find destinations matching user preferences and interests',
+      itineraryMatching: 'Suggest similar travel plans and experiences',
+      personalization: 'Match user profiles with relevant travel content',
+      contentDeduplication: 'Identify similar travel content and reviews',
+      realTimeRecommendations: 'Provide instant, contextual travel suggestions'
     },
     advantages: [
-      'Scalable to millions of travel documents',
-      'Real-time semantic search capabilities',
-      'Flexible metadata filtering and boosting',
-      'Efficient similarity computation',
-      'Support for multiple search strategies'
+      'Semantic search beyond keyword matching',
+      'Scalable similarity search for millions of vectors',
+      'Real-time updates and queries',
+      'Integration with ML pipelines',
+      'Support for metadata filtering'
     ],
     implementation: {
-      storage: 'In-memory vector database with metadata indexing',
-      embedding: 'Google Generative AI text-embedding-004 model',
-      similarity: 'Cosine similarity for vector comparison',
-      indexing: 'Automatic metadata indexing for fast filtering'
+      steps: [
+        '1. Choose appropriate vector database provider',
+        '2. Initialize database connection and index',
+        '3. Generate embeddings for travel content',
+        '4. Upsert vectors with metadata to database',
+        '5. Query database for similar vectors',
+        '6. Return ranked results to users'
+      ]
     },
-    sampleData: {
-      destinations: 'Goa Beach Paradise, Manali Mountain Retreat',
-      activities: 'Mumbai Street Food Tour, Kerala Backwater Houseboat',
-      categories: 'beach, mountain, culture, food, nature',
-      types: 'destination, activity, review, itinerary'
-    }
+    availableDestinations: sampleTravelDestinations.length
   });
 });
 
