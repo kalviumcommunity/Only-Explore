@@ -61,7 +61,7 @@ export async function performStopSequenceGeneration(config: StopSequenceConfig):
   try {
     const preset = stopSequencePresets[config.responseType];
     const stopSequences = config.customStops || preset.stops;
-    const systemPrompt = systemPrompts[config.responseType] || systemPrompts.conversation;
+    const systemPrompt = systemPrompts[config.responseType as keyof typeof systemPrompts] || systemPrompts.conversation;
     
     console.log(`⏹️ Using stop sequences: ${stopSequences.join(', ')}`);
 

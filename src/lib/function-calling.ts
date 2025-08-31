@@ -198,7 +198,7 @@ export async function processFunctionCall(userMessage: string) {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       tools: [{
-        functionDeclarations: travelFunctions
+        functionDeclarations: travelFunctions as any
       }]
     });
 
