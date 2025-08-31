@@ -3,530 +3,327 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-export interface VectorDocument {
-  id: string;
-  vector: number[];
-  metadata: {
-    title: string;
-    content: string;
-    category: string;
-    location: string;
-    tags: string[];
-    type: 'destination' | 'review' | 'itinerary' | 'activity';
-    rating?: number;
-    price?: string;
-    season?: string[];
-    [key: string]: any;
-  };
-  timestamp: Date;
+// Pinecone client initialization (will be imported when needed)
+let pineconeClient: any = null;
+
+export interface VectorDBConfig {
+  provider: 'pinecone' | 'weaviate' | 'local';
+  indexName?: string;
+  namespace?: string;
 }
 
-export interface VectorSearchConfig {
-  query: string;
-  topK?: number;
-  threshold?: number;
-  filters?: {
-    category?: string[];
-    location?: string[];
-    type?: string[];
-    price?: string[];
-    season?: string[];
-  };
-  searchType?: 'similarity' | 'hybrid' | 'filtered';
+export interface TravelDocument {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  location: string;
+  tags: string[];
+  metadata?: Record<string, any>;
 }
 
 export interface VectorSearchResult {
   id: string;
   score: number;
-  metadata: VectorDocument['metadata'];
-  vector?: number[];
-  searchType: string;
+  title: string;
+  content: string;
+  metadata?: Record<string, any>;
 }
 
-export interface VectorDatabaseStats {
-  totalDocuments: number;
-  categories: Record<string, number>;
-  locations: Record<string, number>;
-  types: Record<string, number>;
-  averageVectorDimension: number;
-  indexSize: number;
+// Initialize Pinecone client
+async function initializePinecone(): Promise<any> {
+  if (!pineconeClient) {
+    try {
+      const { PineconeClient } = await import('@pinecone-database/pinecone');
+      pineconeClient = new PineconeClient();
+      await pineconeClient.init({
+        apiKey: process.env.PINECONE_API_KEY!,
+        environment: process.env.PINECONE_ENVIRONMENT || 'us-west1-gcp'
+      });
+    } catch (error) {
+      console.error('Pinecone initialization failed:', error);
+      throw new Error('Pinecone client not available. Install @pinecone-database/pinecone package.');
+    }
+  }
+  return pineconeClient;
 }
 
-// In-memory vector database simulation
-class VectorDatabase {
-  private documents: Map<string, VectorDocument> = new Map();
-  private index: Map<string, number[]> = new Map(); // id -> vector
-  private metadataIndex: Map<string, Set<string>> = new Map(); // field -> values
-
-  constructor() {
-    console.log('🗄️ Vector Database initialized');
-  }
-
-  // Add document to vector database
-  async addDocument(document: Omit<VectorDocument, 'timestamp'>): Promise<void> {
-    try {
-      const docWithTimestamp: VectorDocument = {
-        ...document,
-        timestamp: new Date()
-      };
-
-      this.documents.set(document.id, docWithTimestamp);
-      this.index.set(document.id, document.vector);
-      
-      // Update metadata index
-      this.updateMetadataIndex(document.metadata);
-      
-      console.log(`📄 Added document ${document.id} to vector database`);
-    } catch (error) {
-      console.error('Error adding document to vector database:', error);
-      throw error;
-    }
-  }
-
-  // Update metadata index for filtering
-  private updateMetadataIndex(metadata: VectorDocument['metadata']): void {
-    const fields = ['category', 'location', 'type', 'price', 'season'];
-    
-    fields.forEach(field => {
-      const value = metadata[field];
-      if (value) {
-        const fieldKey = `${field}_index`;
-        if (!this.metadataIndex.has(fieldKey)) {
-          this.metadataIndex.set(fieldKey, new Set());
-        }
-        
-        if (Array.isArray(value)) {
-          value.forEach(v => this.metadataIndex.get(fieldKey)!.add(v));
-        } else {
-          this.metadataIndex.get(fieldKey)!.add(value);
-        }
-      }
-    });
-  }
-
-  // Search documents by vector similarity
-  async search(config: VectorSearchConfig): Promise<VectorSearchResult[]> {
-    try {
-      console.log(`🔍 Vector database search: "${config.query}"`);
-      
-      // Generate query embedding
-      const queryVector = await this.generateEmbedding(config.query);
-      
-      let results: VectorSearchResult[] = [];
-      
-      // Apply filters if specified
-      let filteredDocs = this.documents;
-      if (config.filters) {
-        filteredDocs = this.applyFilters(filteredDocs, config.filters);
-      }
-      
-      // Calculate similarities
-      for (const [id, doc] of filteredDocs) {
-        const similarity = this.calculateCosineSimilarity(queryVector, doc.vector);
-        
-        if (similarity >= (config.threshold || 0.1)) {
-          results.push({
-            id,
-            score: similarity,
-            metadata: doc.metadata,
-            searchType: config.searchType || 'similarity'
-          });
-        }
-      }
-      
-      // Sort by score and limit results
-      results.sort((a, b) => b.score - a.score);
-      results = results.slice(0, config.topK || 10);
-      
-      console.log(`✅ Found ${results.length} similar documents`);
-      return results;
-    } catch (error) {
-      console.error('Error in vector database search:', error);
-      throw error;
-    }
-  }
-
-  // Apply metadata filters
-  private applyFilters(
-    documents: Map<string, VectorDocument>, 
-    filters: VectorSearchConfig['filters']
-  ): Map<string, VectorDocument> {
-    if (!filters) return documents;
-    
-    const filtered = new Map<string, VectorDocument>();
-    
-    for (const [id, doc] of documents) {
-      let include = true;
-      
-      // Category filter
-      if (filters.category && filters.category.length > 0) {
-        if (!filters.category.includes(doc.metadata.category)) {
-          include = false;
-        }
-      }
-      
-      // Location filter
-      if (filters.location && filters.location.length > 0) {
-        if (!filters.location.includes(doc.metadata.location)) {
-          include = false;
-        }
-      }
-      
-      // Type filter
-      if (filters.type && filters.type.length > 0) {
-        if (!filters.type.includes(doc.metadata.type)) {
-          include = false;
-        }
-      }
-      
-      // Price filter
-      if (filters.price && filters.price.length > 0) {
-        if (!filters.price.includes(doc.metadata.price || '')) {
-          include = false;
-        }
-      }
-      
-      // Season filter
-      if (filters.season && filters.season.length > 0) {
-        const docSeasons = doc.metadata.season || [];
-        if (!filters.season.some(s => docSeasons.includes(s))) {
-          include = false;
-        }
-      }
-      
-      if (include) {
-        filtered.set(id, doc);
-      }
-    }
-    
-    return filtered;
-  }
-
-  // Hybrid search combining vector similarity with metadata matching
-  async hybridSearch(
-    query: string,
-    metadataBoost: Record<string, number> = {},
-    topK: number = 10
-  ): Promise<VectorSearchResult[]> {
-    try {
-      console.log(`🔍 Hybrid search: "${query}"`);
-      
-      const queryVector = await this.generateEmbedding(query);
-      const results: VectorSearchResult[] = [];
-      
-      for (const [id, doc] of this.documents) {
-        // Base similarity score
-        let score = this.calculateCosineSimilarity(queryVector, doc.vector);
-        
-        // Apply metadata boosts
-        for (const [field, boost] of Object.entries(metadataBoost)) {
-          const fieldValue = doc.metadata[field];
-          if (fieldValue && this.matchesQuery(query, fieldValue)) {
-            score += boost;
-          }
-        }
-        
-        results.push({
-          id,
-          score,
-          metadata: doc.metadata,
-          searchType: 'hybrid'
-        });
-      }
-      
-      results.sort((a, b) => b.score - a.score);
-      return results.slice(0, topK);
-    } catch (error) {
-      console.error('Error in hybrid search:', error);
-      throw error;
-    }
-  }
-
-  // Check if metadata field matches query
-  private matchesQuery(query: string, fieldValue: any): boolean {
-    const queryLower = query.toLowerCase();
-    
-    if (typeof fieldValue === 'string') {
-      return fieldValue.toLowerCase().includes(queryLower);
-    } else if (Array.isArray(fieldValue)) {
-      return fieldValue.some(v => v.toLowerCase().includes(queryLower));
-    }
-    
-    return false;
-  }
-
-  // Batch insert multiple documents
-  async batchInsert(documents: Omit<VectorDocument, 'timestamp'>[]): Promise<void> {
-    console.log(`📦 Batch inserting ${documents.length} documents`);
-    
-    for (const doc of documents) {
-      await this.addDocument(doc);
-    }
-    
-    console.log(`✅ Batch insert completed`);
-  }
-
-  // Get database statistics
-  getStats(): VectorDatabaseStats {
-    const categories: Record<string, number> = {};
-    const locations: Record<string, number> = {};
-    const types: Record<string, number> = {};
-    let totalDimensions = 0;
-    
-    for (const doc of this.documents.values()) {
-      // Count categories
-      categories[doc.metadata.category] = (categories[doc.metadata.category] || 0) + 1;
-      
-      // Count locations
-      locations[doc.metadata.location] = (locations[doc.metadata.location] || 0) + 1;
-      
-      // Count types
-      types[doc.metadata.type] = (types[doc.metadata.type] || 0) + 1;
-      
-      // Sum dimensions
-      totalDimensions += doc.vector.length;
-    }
-    
-    return {
-      totalDocuments: this.documents.size,
-      categories,
-      locations,
-      types,
-      averageVectorDimension: this.documents.size > 0 ? totalDimensions / this.documents.size : 0,
-      indexSize: this.index.size
-    };
-  }
-
-  // Clear database
-  clear(): void {
-    this.documents.clear();
-    this.index.clear();
-    this.metadataIndex.clear();
-    console.log('🗑️ Vector database cleared');
-  }
-
-  // Generate embedding for text
-  private async generateEmbedding(text: string): Promise<number[]> {
-    try {
-      const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
-      const result = await model.embedContent(text);
-      return result.embedding.values || [];
-    } catch (error) {
-      console.error('Error generating embedding:', error);
-      return [];
-    }
-  }
-
-  // Calculate cosine similarity between two vectors
-  private calculateCosineSimilarity(vectorA: number[], vectorB: number[]): number {
-    if (vectorA.length !== vectorB.length) {
-      throw new Error('Vectors must have the same length');
-    }
-    
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < vectorA.length; i++) {
-      dotProduct += vectorA[i] * vectorB[i];
-      normA += vectorA[i] * vectorA[i];
-      normB += vectorB[i] * vectorB[i];
-    }
-    
-    if (normA === 0 || normB === 0) return 0;
-    
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+// Generate embeddings using Gemini
+async function generateEmbedding(text: string): Promise<number[]> {
+  try {
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(text);
+    return result.embedding.values || [];
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    return [];
   }
 }
 
-// Singleton instance
-export const vectorDB = new VectorDatabase();
-
-// Sample travel documents for demonstration
-export const sampleTravelDocuments: Omit<VectorDocument, 'vector' | 'timestamp'>[] = [
+// Sample travel destinations for demonstration
+export const sampleTravelDestinations: TravelDocument[] = [
   {
-    id: 'goa_beach_001',
-    metadata: {
-      title: 'Goa Beach Paradise',
-      content: 'Beautiful beaches with vibrant nightlife, Portuguese heritage, and water sports',
-      category: 'beach',
-      location: 'Goa, India',
-      tags: ['beach', 'nightlife', 'heritage', 'water sports'],
-      type: 'destination',
-      rating: 4.5,
-      price: 'mid-range',
-      season: ['winter', 'spring']
-    }
+    id: 'dest_001',
+    title: 'Goa Beach Paradise',
+    content: 'Beautiful beaches, vibrant nightlife, Portuguese heritage, water sports, beach shacks, and tropical paradise atmosphere',
+    category: 'beach',
+    location: 'Goa, India',
+    tags: ['beach', 'nightlife', 'heritage', 'water sports', 'tropical'],
+    metadata: { country: 'India', region: 'Western', budget: 'mid-range' }
   },
   {
-    id: 'manali_mountain_002',
-    metadata: {
-      title: 'Manali Mountain Retreat',
-      content: 'Scenic mountain views, adventure sports, and peaceful hill station atmosphere',
-      category: 'mountain',
-      location: 'Himachal Pradesh, India',
-      tags: ['mountain', 'adventure', 'peaceful', 'hill station'],
-      type: 'destination',
-      rating: 4.7,
-      price: 'budget',
-      season: ['summer', 'autumn']
-    }
+    id: 'dest_002',
+    title: 'Manali Mountain Adventure',
+    content: 'Snow-capped peaks, adventure trekking, river rafting, paragliding, romantic hill station, and scenic mountain views',
+    category: 'mountain',
+    location: 'Manali, India',
+    tags: ['mountains', 'adventure', 'trekking', 'romantic', 'scenic'],
+    metadata: { country: 'India', region: 'Northern', budget: 'budget' }
   },
   {
-    id: 'varanasi_culture_003',
-    metadata: {
-      title: 'Varanasi Cultural Experience',
-      content: 'Ancient temples, spiritual ceremonies, and rich cultural heritage',
-      category: 'culture',
-      location: 'Uttar Pradesh, India',
-      tags: ['culture', 'spiritual', 'temples', 'heritage'],
-      type: 'destination',
-      rating: 4.3,
-      price: 'budget',
-      season: ['winter', 'spring', 'autumn']
-    }
+    id: 'dest_003',
+    title: 'Kyoto Traditional Culture',
+    content: 'Ancient temples, traditional ceremonies, zen gardens, cultural heritage, spiritual experiences, and Japanese authenticity',
+    category: 'culture',
+    location: 'Kyoto, Japan',
+    tags: ['temples', 'culture', 'traditional', 'spiritual', 'heritage'],
+    metadata: { country: 'Japan', region: 'Kansai', budget: 'luxury' }
   },
   {
-    id: 'mumbai_food_004',
-    metadata: {
-      title: 'Mumbai Street Food Tour',
-      content: 'Diverse street food, local markets, and authentic flavors',
-      category: 'food',
-      location: 'Maharashtra, India',
-      tags: ['food', 'street food', 'markets', 'authentic'],
-      type: 'activity',
-      rating: 4.6,
-      price: 'budget',
-      season: ['all']
-    }
+    id: 'dest_004',
+    title: 'Swiss Alps Luxury',
+    content: 'Pristine Alpine scenery, luxury mountain resorts, skiing, scenic train rides, romantic chalets, and breathtaking views',
+    category: 'mountain',
+    location: 'Swiss Alps, Switzerland',
+    tags: ['alpine', 'luxury', 'skiing', 'scenic', 'romantic'],
+    metadata: { country: 'Switzerland', region: 'Central Europe', budget: 'luxury' }
   },
   {
-    id: 'kerala_backwaters_005',
-    metadata: {
-      title: 'Kerala Backwater Houseboat',
-      content: 'Peaceful backwater cruises, traditional houseboats, and nature immersion',
-      category: 'nature',
-      location: 'Kerala, India',
-      tags: ['nature', 'backwaters', 'houseboat', 'peaceful'],
-      type: 'activity',
-      rating: 4.8,
-      price: 'luxury',
-      season: ['winter', 'spring']
-    }
+    id: 'dest_005',
+    title: 'Bali Tropical Island',
+    content: 'Tropical beaches, Hindu temples, rice terraces, yoga retreats, vibrant culture, and island paradise atmosphere',
+    category: 'beach',
+    location: 'Bali, Indonesia',
+    tags: ['tropical', 'temples', 'yoga', 'culture', 'island'],
+    metadata: { country: 'Indonesia', region: 'Southeast Asia', budget: 'mid-range' }
   }
 ];
 
-// Initialize vector database with sample data
-export async function initializeVectorDatabase(): Promise<void> {
-  console.log('🚀 Initializing vector database with sample data...');
-  
-  try {
-    // Generate embeddings for sample documents
-    const documentsWithVectors: Omit<VectorDocument, 'timestamp'>[] = [];
-    
-    for (const doc of sampleTravelDocuments) {
-      const text = `${doc.metadata.title} ${doc.metadata.content} ${doc.metadata.tags.join(' ')}`;
-      const vector = await vectorDB['generateEmbedding'](text);
-      
-      documentsWithVectors.push({
-        ...doc,
-        vector
-      });
+// Vector Database abstraction class
+export class VectorDatabase {
+  private config: VectorDBConfig;
+  private client: any;
+
+  constructor(config: VectorDBConfig) {
+    this.config = config;
+  }
+
+  async initialize(): Promise<void> {
+    switch (this.config.provider) {
+      case 'pinecone':
+        this.client = await initializePinecone();
+        break;
+      case 'weaviate':
+        // Weaviate initialization would go here
+        throw new Error('Weaviate integration not implemented yet');
+      case 'local':
+        // Local vector storage (using in-memory for demo)
+        this.client = new Map();
+        break;
+      default:
+        throw new Error(`Unsupported vector database provider: ${this.config.provider}`);
     }
-    
-    // Batch insert documents
-    await vectorDB.batchInsert(documentsWithVectors);
-    
-    console.log('✅ Vector database initialized successfully');
-  } catch (error) {
-    console.error('Error initializing vector database:', error);
-    throw error;
+  }
+
+  async upsertDocuments(documents: TravelDocument[]): Promise<void> {
+    console.log(`📤 Upserting ${documents.length} documents to ${this.config.provider}`);
+
+    if (this.config.provider === 'pinecone') {
+      const index = this.client.Index(this.config.indexName || 'only-explore-travel');
+      
+      // Generate embeddings and prepare vectors for upsert
+      const vectors = [];
+      for (const doc of documents) {
+        const text = `${doc.title} ${doc.content} ${doc.tags.join(' ')}`;
+        const embedding = await generateEmbedding(text);
+        
+        if (embedding.length > 0) {
+          vectors.push({
+            id: doc.id,
+            values: embedding,
+            metadata: {
+              title: doc.title,
+              content: doc.content,
+              category: doc.category,
+              location: doc.location,
+              tags: doc.tags,
+              ...doc.metadata
+            }
+          });
+        }
+      }
+
+      // Upsert in batches of 100 (Pinecone limit)
+      const batchSize = 100;
+      for (let i = 0; i < vectors.length; i += batchSize) {
+        const batch = vectors.slice(i, i + batchSize);
+        await index.upsert({
+          upsertRequest: {
+            vectors: batch,
+            namespace: this.config.namespace || 'travel-destinations'
+          }
+        });
+        console.log(`✅ Upserted batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(vectors.length / batchSize)}`);
+      }
+    } else if (this.config.provider === 'local') {
+      // Local storage implementation
+      for (const doc of documents) {
+        const text = `${doc.title} ${doc.content} ${doc.tags.join(' ')}`;
+        const embedding = await generateEmbedding(text);
+        this.client.set(doc.id, { ...doc, embedding });
+      }
+    }
+  }
+
+  async searchSimilar(query: string, topK: number = 5, filter?: Record<string, any>): Promise<VectorSearchResult[]> {
+    console.log(`🔍 Searching for: "${query}" (top ${topK})`);
+
+    if (this.config.provider === 'pinecone') {
+      const queryEmbedding = await generateEmbedding(query);
+      if (queryEmbedding.length === 0) {
+        return [];
+      }
+
+      const index = this.client.Index(this.config.indexName || 'only-explore-travel');
+      const queryResponse = await index.query({
+        queryRequest: {
+          vector: queryEmbedding,
+          topK,
+          includeMetadata: true,
+          namespace: this.config.namespace || 'travel-destinations',
+          ...(filter && { filter })
+        }
+      });
+
+      return queryResponse.matches?.map((match: any) => ({
+        id: match.id,
+        score: match.score,
+        title: match.metadata?.title || '',
+        content: match.metadata?.content || '',
+        metadata: match.metadata
+      })) || [];
+
+    } else if (this.config.provider === 'local') {
+      const queryEmbedding = await generateEmbedding(query);
+      const results: VectorSearchResult[] = [];
+
+      // Simple cosine similarity for local implementation
+      for (const [id, doc] of this.client.entries()) {
+        if (doc.embedding) {
+          const similarity = this.calculateCosineSimilarity(queryEmbedding, doc.embedding);
+          results.push({
+            id,
+            score: similarity,
+            title: doc.title,
+            content: doc.content,
+            metadata: doc.metadata
+          });
+        }
+      }
+
+      return results
+        .sort((a, b) => b.score - a.score)
+        .slice(0, topK);
+    }
+
+    return [];
+  }
+
+  async deleteDocuments(ids: string[]): Promise<void> {
+    console.log(`🗑️ Deleting ${ids.length} documents from ${this.config.provider}`);
+
+    if (this.config.provider === 'pinecone') {
+      const index = this.client.Index(this.config.indexName || 'only-explore-travel');
+      await index.delete1({
+        ids,
+        namespace: this.config.namespace || 'travel-destinations'
+      });
+    } else if (this.config.provider === 'local') {
+      ids.forEach(id => this.client.delete(id));
+    }
+  }
+
+  async getStats(): Promise<any> {
+    if (this.config.provider === 'pinecone') {
+      const index = this.client.Index(this.config.indexName || 'only-explore-travel');
+      return await index.describeIndexStats();
+    } else if (this.config.provider === 'local') {
+      return {
+        totalVectorCount: this.client.size,
+        namespaces: { 'local': { vectorCount: this.client.size } }
+      };
+    }
+    return {};
+  }
+
+  private calculateCosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) return 0;
+
+    let dotProduct = 0;
+    let magnitudeA = 0;
+    let magnitudeB = 0;
+
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      magnitudeA += vecA[i] * vecA[i];
+      magnitudeB += vecB[i] * vecB[i];
+    }
+
+    magnitudeA = Math.sqrt(magnitudeA);
+    magnitudeB = Math.sqrt(magnitudeB);
+
+    if (magnitudeA === 0 || magnitudeB === 0) return 0;
+    return dotProduct / (magnitudeA * magnitudeB);
   }
 }
 
-// Advanced vector database operations
-export async function performAdvancedVectorSearch(
-  query: string,
-  options: {
-    searchType: 'similarity' | 'hybrid' | 'filtered';
-    filters?: VectorSearchConfig['filters'];
-    metadataBoost?: Record<string, number>;
-    topK?: number;
-  }
-): Promise<{
-  results: VectorSearchResult[];
-  searchType: string;
-  queryVector: number[];
-  stats: VectorDatabaseStats;
+// Factory function to create vector database instances
+export function createVectorDatabase(config: VectorDBConfig): VectorDatabase {
+  return new VectorDatabase(config);
+}
+
+// Comparison function for different vector databases
+export async function compareVectorDatabases(query: string): Promise<{
+  pinecone?: VectorSearchResult[];
+  local: VectorSearchResult[];
+  comparison: string;
 }> {
-  const queryVector = await vectorDB['generateEmbedding'](query);
-  const stats = vectorDB.getStats();
-  
-  let results: VectorSearchResult[];
-  
-  switch (options.searchType) {
-    case 'hybrid':
-      results = await vectorDB.hybridSearch(query, options.metadataBoost, options.topK);
-      break;
-    case 'filtered':
-      results = await vectorDB.search({
-        query,
-        topK: options.topK,
-        filters: options.filters,
-        searchType: 'filtered'
+  const results: any = {};
+
+  // Local vector database
+  const localDB = createVectorDatabase({ provider: 'local' });
+  await localDB.initialize();
+  await localDB.upsertDocuments(sampleTravelDestinations);
+  results.local = await localDB.searchSimilar(query, 3);
+
+  // Pinecone (if configured)
+  if (process.env.PINECONE_API_KEY) {
+    try {
+      const pineconeDB = createVectorDatabase({ 
+        provider: 'pinecone',
+        indexName: 'only-explore-travel',
+        namespace: 'travel-destinations'
       });
-      break;
-    default:
-      results = await vectorDB.search({
-        query,
-        topK: options.topK,
-        searchType: 'similarity'
-      });
+      await pineconeDB.initialize();
+      results.pinecone = await pineconeDB.searchSimilar(query, 3);
+    } catch (error) {
+      console.error('Pinecone comparison failed:', error);
+      results.pinecone = [];
+    }
   }
-  
+
   return {
-    results,
-    searchType: options.searchType,
-    queryVector,
-    stats
+    ...results,
+    comparison: 'Local provides quick prototyping while Pinecone offers production-scale performance'
   };
-}
-
-// Compare different search strategies
-export async function compareSearchStrategies(query: string): Promise<{
-  similarity: VectorSearchResult[];
-  hybrid: VectorSearchResult[];
-  filtered: VectorSearchResult[];
-  analysis: {
-    similarityAvg: number;
-    hybridAvg: number;
-    filteredAvg: number;
-    overlap: number;
-  };
-}> {
-  const [similarity, hybrid, filtered] = await Promise.all([
-    vectorDB.search({ query, searchType: 'similarity', topK: 5 }),
-    vectorDB.hybridSearch(query, { title: 0.2, category: 0.1 }, 5),
-    vectorDB.search({ 
-      query, 
-      searchType: 'filtered', 
-      topK: 5,
-      filters: { category: ['beach', 'mountain', 'culture'] }
-    })
-  ]);
-  
-  const analysis = {
-    similarityAvg: similarity.reduce((sum, r) => sum + r.score, 0) / similarity.length,
-    hybridAvg: hybrid.reduce((sum, r) => sum + r.score, 0) / hybrid.length,
-    filteredAvg: filtered.reduce((sum, r) => sum + r.score, 0) / filtered.length,
-    overlap: 0
-  };
-  
-  // Calculate overlap between similarity and hybrid results
-  const similarityIds = new Set(similarity.map(r => r.id));
-  const hybridIds = new Set(hybrid.map(r => r.id));
-  const overlap = [...similarityIds].filter(id => hybridIds.has(id)).length;
-  analysis.overlap = overlap;
-  
-  return { similarity, hybrid, filtered, analysis };
 }
