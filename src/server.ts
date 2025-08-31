@@ -21,6 +21,7 @@ import ragRoutes from './routes/rag.js';
 import dotProductSimilarityRoutes from './routes/dot-product-similarity.js';
 import vectorDatabaseRoutes from './routes/vector-database.js';
 import tokenizationRoutes from './routes/tokenization.js';
+import evaluationRoutes from './routes/evaluation.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -84,6 +85,9 @@ app.use('/api/vector-db', vectorDatabaseRoutes);
 
 // Mount Tokenization routes
 app.use('/api/tokenization', tokenizationRoutes);
+
+// Mount Evaluation routes
+app.use('/api/evaluation', evaluationRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -149,13 +153,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag', 'dot_product_similarity', 'vector_database_integration'],
-    step: 17
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag', 'dot_product_similarity', 'vector_database_integration', 'tokenization', 'evaluation_framework'],
+    step: 19
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 & 17) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 & 19) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -204,4 +208,7 @@ app.listen(port, () => {
   console.log(`🗄️ Vector Database API: http://localhost:${port}/api/vector-db`);
   console.log(`🔍 Vector Search: http://localhost:${port}/api/vector-db/search`);
   console.log(`🔬 Compare DBs: http://localhost:${port}/api/vector-db/compare`);
+  console.log(`🧪 Evaluation API: http://localhost:${port}/api/evaluation`);
+  console.log(`📊 Run Tests: http://localhost:${port}/api/evaluation/run`);
+  console.log(`🔬 A/B Testing: http://localhost:${port}/api/evaluation/ab-test`);
 });
