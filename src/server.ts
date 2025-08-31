@@ -15,6 +15,7 @@ import topKSamplingRoutes from './routes/top-k-sampling.js';
 import topPSamplingRoutes from './routes/top-p-sampling.js';
 import stopSequenceRoutes from './routes/stop-sequences.js';
 import cosineSimilarityRoutes from './routes/cosine-similarity.js';
+import chainOfThoughtRoutes from './routes/chain-of-thought.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -60,6 +61,9 @@ app.use('/api/stop-sequences', stopSequenceRoutes);
 
 // Mount Cosine Similarity routes
 app.use('/api/cosine-similarity', cosineSimilarityRoutes);
+
+// Mount Chain-of-Thought routes
+app.use('/api/chain-of-thought', chainOfThoughtRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -125,13 +129,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity'],
-    step: 12
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought'],
+    step: 13
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11 & 12) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 & 13) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -165,4 +169,7 @@ app.listen(port, () => {
   console.log(`🔍 Cosine Similarity API: http://localhost:${port}/api/cosine-similarity`);
   console.log(`🎯 Advanced Similarity: http://localhost:${port}/api/cosine-similarity/advanced`);
   console.log(`🔬 Compare Similarity: http://localhost:${port}/api/cosine-similarity/compare`);
+  console.log(`🧠 Chain-of-Thought API: http://localhost:${port}/api/chain-of-thought`);
+  console.log(`🔬 Compare CoT: http://localhost:${port}/api/chain-of-thought/compare`);
+  console.log(`🔀 Multi-path CoT: http://localhost:${port}/api/chain-of-thought/multi-path`);
 });
