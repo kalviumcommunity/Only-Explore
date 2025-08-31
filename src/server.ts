@@ -19,6 +19,7 @@ import chainOfThoughtRoutes from './routes/chain-of-thought.js';
 import rtfcRoutes from './routes/system-user-prompting.js';
 import ragRoutes from './routes/rag.js';
 import dotProductSimilarityRoutes from './routes/dot-product-similarity.js';
+import vectorDatabaseRoutes from './routes/vector-database.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -76,6 +77,9 @@ app.use('/api/rag', ragRoutes);
 
 // Mount Dot Product Similarity routes
 app.use('/api/dot-product', dotProductSimilarityRoutes);
+
+// Mount Vector Database routes
+app.use('/api/vector-database', vectorDatabaseRoutes);
 
 /**
  * Search endpoint: /api/search?q=beach vacation&limit=3
@@ -141,13 +145,13 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag', 'dot_product_similarity'],
-    step: 15
+    features: ['semantic_search', 'basic_chat', 'function_calling', 'zero_shot_prompting', 'one_shot_prompting', 'multi_shot_prompting', 'dynamic_prompting', 'temperature_control', 'top_k_sampling', 'top_p_sampling', 'stop_sequences', 'cosine_similarity', 'chain_of_thought', 'rtfc_framework', 'rag', 'dot_product_similarity', 'vector_database'],
+    step: 16
   });
 });
 
 app.listen(port, () => {
-  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 & 15) running on port ${port}`);
+  console.log(`🚀 Only Explore Server (Steps 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 & 16) running on port ${port}`);
   console.log(`📝 Search API: http://localhost:${port}/api/search?q=your_query`);
   console.log(`💬 Basic Chat: http://localhost:${port}/api/chat/basic`);
   console.log(`🤖 Function Chat: http://localhost:${port}/api/chat`);
@@ -193,4 +197,7 @@ app.listen(port, () => {
   console.log(`🔍 Dot Product API: http://localhost:${port}/api/dot-product`);
   console.log(`🔬 Compare Similarities: http://localhost:${port}/api/dot-product/compare`);
   console.log(`🎯 Weighted Dot Product: http://localhost:${port}/api/dot-product/weighted`);
+  console.log(`🗄️ Vector Database API: http://localhost:${port}/api/vector-database`);
+  console.log(`🔍 Hybrid Search: http://localhost:${port}/api/vector-database/hybrid`);
+  console.log(`🔬 Compare Strategies: http://localhost:${port}/api/vector-database/compare`);
 });
