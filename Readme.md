@@ -1,117 +1,150 @@
-#  Only Explore – AI Travel Chat App  
+# Only Explore 🌍
 
-##  Project Overview  
-**Only Explore** is an AI-powered travel assistant that simplifies the trip planning process.  
-Instead of browsing multiple sites and apps, users can chat with *Only Explore* just like they would with a friend. The app helps them plan trips, estimate expenses, explore cuisines & culture, and even recall previously visited places.  
+> Your AI-powered travel planner that creates personalized itineraries with Indian Rupee currency support
 
-Our mission is to make **travel planning fun, smart, and conversational**.  
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![React](https://img.shields.io/badge/React-18.0+-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18.0+-green.svg)](https://nodejs.org/)
+
+## 📖 Overview
+
+Only Explore is a modern, AI-powered travel planning application that generates personalized itineraries based on your preferences. Built with React, TypeScript, and advanced AI integration, it provides detailed day-by-day travel plans with realistic Indian pricing in Rupees.
+
+### ✨ Key Features
+
+- 🤖 **AI-Powered Itinerary Generation** - Create personalized travel plans using advanced AI
+- 💰 **Indian Rupee Currency Support** - All pricing in INR with proper Indian numbering system
+- 🎨 **Beautiful UI/UX** - Modern interface with travel-themed background patterns
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
+- ✏️ **Real-time Editing** - Modify itineraries through natural language chat
+- 📄 **Export Options** - Download PDFs, copy to clipboard, or share itineraries
+- 🔧 **Robust JSON Parsing** - Handles malformed AI responses gracefully
+- 🌍 **Multi-destination Support** - Plan trips anywhere in the world
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18.0 or higher
+- npm or yarn package manager
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/only-explore.git
+   cd only-explore
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   ```
+   
+   Edit `.env.local` with your configuration:
+   ```env
+   NEXT_PUBLIC_API_URL=your_api_url_here
+   AI_API_KEY=your_ai_api_key_here
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **React 18** - Modern React with hooks and concurrent features
+- **TypeScript** - Type-safe development
+- **Next.js** - Full-stack React framework
+- **Tailwind CSS** - Utility-first CSS framework
+- **Radix UI** - Accessible component primitives
+- **React Hook Form** - Performant forms with validation
+- **Zod** - TypeScript-first schema validation
+
+### Backend & AI
+- **Google Genkit** - AI workflow orchestration
+- **Node.js** - Server-side runtime
+- **TypeScript** - Type-safe backend development
+
+### Development Tools
+- **ESLint** - Code linting
+- **Prettier** - Code formatting
+- **Husky** - Git hooks
+- **Lint-staged** - Pre-commit linting
+
+## 📁 Project Structure
+
+```
+only-explore/
+├── public/
+│   ├── images/
+│   │   └── travel-pattern.svg    # Travel-themed background pattern
+│   └── ...
+├── src/
+│   ├── ai/
+│   │   ├── flows/                # AI workflow definitions
+│   │   │   ├── generate-travel-itinerary.ts
+│   │   │   ├── edit-travel-itinerary.ts
+│   │   │   └── summarize-travel-itinerary.ts
+│   │   └── genkit.ts             # AI configuration
+│   ├── components/
+│   │   ├── ui/                   # Reusable UI components
+│   │   └── OnlyExplore.tsx       # Main application component
+│   ├── lib/
+│   │   └── utils.ts              # Utility functions
+│   └── ...
+├── .env.example                  # Environment variables template
+├── package.json
+├── tailwind.config.js
+├── tsconfig.json
+└── README.md
+```
+
+## 💻 Usage Examples
+
+### Basic Itinerary Generation
+
+1. **Fill out the travel form:**
+   - Destination: "Paris, France"
+   - Duration: "7 days"
+   - Budget: "₹1,50,000"
+   - Interests: "food, history, art"
+
+2. **Click "Plan My Trip!"** to generate your itinerary
+
+3. **Review the generated plan** with day-by-day activities and costs
+
+### Editing Itineraries
+
+Use the chat interface at the bottom of the itinerary to make changes:
+
+- "Add a day trip to Versailles"
+- "Remove the museum visit on day 3"
+- "Change the restaurant recommendation"
+- "Increase the budget for day 5"
+
+### Export Options
+
+- **Copy to Clipboard** - Quick sharing via messaging apps
+- **Download PDF** - Save for offline reference
+- **Share** - Native sharing if supported by browser
 
 ---
 
-##  Key Features  
-- **AI Travel Chat Assistant**  
-   - Plan personalized itineraries (day-by-day).  
-   - Suggest activities, attractions, food, and culture.  
-   - Provide cost estimates and budget-friendly alternatives.  
-
--  **Smart Trip Planning**  
-   - Suggests hotels, flights, and transport (via API integration).  
-   - Weather and best-time-to-visit recommendations.  
-
--  **Community Sharing**  
-   - Users can chat and share travel stories.  
-   - AI highlights similar destinations for inspiration.  
-
--  **Trip History**  
-   - Save, revisit, and update past trip plans anytime.  
-
----
-
-## Tech Stack  
-
-### **Frontend**
-- React (Next.js / Vite)  
-- Tailwind CSS (for modern UI)  
-- ShadCN/UI (for prebuilt components like chat bubbles, cards)  
-
-### **Backend**
-- Node.js (Express) or Go (for APIs and request handling)  
-- Supabase (Database + Authentication + Realtime chat storage)  
-
-### **AI Integration**
-- OpenAI GPT / Gemini API for conversational responses.  
-- HuggingFace (optional for NLP fine-tuning).  
-
-### **APIs**
-- Skyscanner / Amadeus (Flights)  
-- Booking.com / Hotels API  
-- Weather API (real-time conditions)  
-
----
-
-##  System Architecture  
-
-1. **User → Frontend (React)**  
-   - User enters a query like: “Plan me a 5-day trip to Bali under $800.”  
-
-2. **Frontend → Backend (Node/Go)**  
-   - Request sent to backend for processing.  
-
-3. **Backend → AI API (OpenAI/Gemini)**  
-   - AI generates an itinerary with budget, food, culture info.  
-
-4. **Backend → External APIs**  
-   - Fetches live flights, hotels, and weather details.  
-
-5. **Backend → Database (Supabase)**  
-   - Stores user chat, saved trips, and recommendations.  
-
-6. **Backend → Frontend**  
-   - Response displayed in a **chat interface** (WhatsApp/ChatGPT style).  
-
----
-
-##  Implementation Plan  
-
-### **Phase 1 – MVP**
-- Create chat UI (React + Tailwind).  
-- Integrate OpenAI/Gemini API for AI responses.  
-- Store user queries + responses in Supabase.  
-
-### **Phase 2 – Smart Planning**
-- Add flight + hotel APIs.  
-- Weather integration.  
-- Allow users to save itineraries.  
-
-### **Phase 3 – Community Features**
-- Add group chat/forum for travelers.  
-- AI suggests similar trips based on user chats.  
-
-### **Phase 4 – Polishing**
-- Add authentication (Google/Supabase Auth).  
-- Responsive mobile-first UI.  
-- Deploy on **Vercel (frontend)** + **Render/Heroku (backend)**.  
-
----
-
-##  Video Explanation Script  
-
-### **Intro:**  
-“Hello everyone, my project is called *Only Explore*, an AI-powered travel assistant that makes planning trips simple, fun, and interactive.”  
-
-### **Problem Statement:**  
-“Travel planning today is scattered — you check multiple websites for flights, hotels, activities, and still don’t get a personalized plan. My app solves this by allowing users to chat with an AI as if it’s their travel buddy.”  
-
-### **Solution:**  
-“With *Only Explore*, you can type something like *Plan me a 5-day trip to Italy under $1200* and instantly get a personalized itinerary, cost estimates, food recommendations, and even cultural tips. The app also connects to live APIs for flights, hotels, and weather.”  
-
-### **Technical Flow:**  
-“The frontend is built in React with Tailwind CSS. The backend runs on Node.js with Supabase as the database. AI integration is done using OpenAI/Gemini API, while external APIs provide real-time travel data. Chat history and itineraries are saved for future use.”  
-
-### **Phases:**  
-“We’ll start with a simple AI chat MVP, then add smart planning, community features, and finally polish with authentication and deployment.”  
-
-### **Closing:**  
-“In short, *Only Explore* is your all-in-one AI travel buddy. It makes trip planning efficient, engaging, and personalized.”  
-
----
+**Made with ❤️ for travelers who love to explore the world!**
